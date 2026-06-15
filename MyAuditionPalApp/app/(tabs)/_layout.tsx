@@ -1,13 +1,19 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { profile, loading } = useProfile();
+
+  // Wait for the saved profile to load, then send first-time users to onboarding.
+  if (loading) return null;
+  if (!profile.instrument) return <Redirect href="/onboarding" />;
 
   return (
     <Tabs

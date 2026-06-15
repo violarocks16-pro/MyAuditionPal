@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { formatIsoDate } from '@/lib/date';
 import { Audition, STATUS_LABELS } from '@/types/audition';
 
 /**
@@ -24,9 +25,9 @@ export function AuditionCard({
 
   // Show the next date that matters: the deadline if there is one, else the audition date.
   const dateLine = audition.applicationDeadline
-    ? `Deadline: ${audition.applicationDeadline}`
+    ? `Deadline: ${formatIsoDate(audition.applicationDeadline)}`
     : audition.auditionDate
-      ? `Audition: ${audition.auditionDate}`
+      ? `Audition: ${formatIsoDate(audition.auditionDate)}`
       : null;
 
   return (

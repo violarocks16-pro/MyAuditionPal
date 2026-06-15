@@ -12,15 +12,23 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 import { createId } from '@/lib/id';
+import {
+  cancelReminder,
+  configureNotifications,
+  scheduleDeadlineReminder,
+} from '@/lib/notifications';
 import { loadAuditions, saveAuditions } from '@/lib/storage';
 import { Audition, AuditionStatus } from '@/types/audition';
 
 /**
  * What the Add form provides when creating an audition: everything except the
- * fields the app fills in itself (id, timestamps). `status` is optional here —
- * if omitted, a new audition starts as 'interested'.
+ * fields the app fills in itself (id, timestamps, reminder id). `status` is
+ * optional here — if omitted, a new audition starts as 'interested'.
  */
-export type NewAuditionInput = Omit<Audition, 'id' | 'createdAt' | 'updatedAt' | 'status'> & {
+export type NewAuditionInput = Omit<
+  Audition,
+  'id' | 'createdAt' | 'updatedAt' | 'status' | 'reminderNotificationId'
+> & {
   status?: AuditionStatus;
 };
 
@@ -42,6 +50,7 @@ export function AuditionProvider({ children }: { children: React.ReactNode }) {
   // Load whatever was saved, once, when the app starts.
   useEffect(() => {
     let active = true;
+    configureNotifications();
     loadAuditions().then((saved) => {
       if (!active) return; // ignore if the component unmounted before we finished
       setAuditions(saved);
@@ -66,6 +75,20 @@ export function AuditionProvider({ children }: { children: React.ReactNode }) {
       saveAuditions(next);
       return next;
     });
+
+    // Schedule a deadline reminder in the background, then store its id on the
+    // record so we can cancel it later if the audition is deleted.
+    scheduleDeadlineReminder(audition).then((notificationId) => {
+      if (!notificationId) return;
+      setAuditions((current) => {
+        const next = current.map((a) =>
+          a.id === audition.id ? { ...a, reminderNotificationId: notificationId } : a
+        );
+        saveAuditions(next);
+        return next;
+      });
+    });
+
     return audition;
   }, []);
 
@@ -81,6 +104,8 @@ export function AuditionProvider({ children }: { children: React.ReactNode }) {
 
   const deleteAudition = useCallback((id: string) => {
     setAuditions((current) => {
+      const target = current.find((a) => a.id === id);
+      cancelReminder(target?.reminderNotificationId); // clean up its scheduled reminder
       const next = current.filter((a) => a.id !== id);
       saveAuditions(next);
       return next;

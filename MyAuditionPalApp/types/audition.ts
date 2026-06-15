@@ -30,6 +30,7 @@ export interface Audition {
   repertoire?: string; // typed list of pieces
   repertoirePhotoUri?: string; // saved photo of the rep list (instead of typing it all)
   notes?: string; // private notes
+  reminderNotificationId?: string; // id of the scheduled deadline reminder, if any
   createdAt: string; // ISO timestamp — when the record was made
   updatedAt: string; // ISO timestamp — last time it changed
 }

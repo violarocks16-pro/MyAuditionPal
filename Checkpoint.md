@@ -46,16 +46,21 @@ Typecheck before declaring done: `npx tsc --noEmit` (kept clean throughout).
 
 Everything persists across app restarts. `npx tsc --noEmit` is clean.
 
+**Added since first checkpoint (2026-06-14):**
+- **Onboarding first-run flow**: no instrument saved → `app/(tabs)/_layout.tsx` redirects to `app/onboarding.tsx`. Instrument chosen via reusable **dropdown** `components/instrument-dropdown.tsx` (Modal-based, used on onboarding + Profile).
+- **Deadline reminders**: `lib/notifications.ts` (expo-notifications) schedules a local reminder at 9 AM the day before `applicationDeadline`; id stored on the audition, cancelled on delete; wired into the audition context. (Tested working via a temporary test-mode that has since been removed.)
+- **Calendar date picker**: `components/date-field.tsx` (@react-native-community/datetimepicker). Dates stored as `YYYY-MM-DD`, displayed spelled-out "Month D, YYYY" via `lib/date.ts` (form + cards).
+
 ---
 
 ## NEXT IDEAS (not yet built)
 
 In rough priority / as discussed with the user:
 
-1. **Onboarding first-run flow** — capture instrument FIRST on first launch (no instrument set → show an instrument picker before the tabs), then the friendly prompt: _"Add one you're preparing for, or one you've already taken."_ This is the planned "instant payoff" onboarding.
-2. **Tap to view & edit an audition** — currently status is fixed at creation; there's NO way to advance Interested → Applied → Attended or edit fields without delete + re-add. A detail/edit screen is the biggest gap in the core tracking loop. (`updateAudition` already exists in the context, ready to use.)
-3. **Deadline alerts** — the user specifically wants the app to notify them as an application deadline approaches. Local notifications via Expo Notifications (no backend needed). Needs permissions + scheduling tied to `applicationDeadline`.
-4. **Polish / later**: proper date picker (dates are plain `YYYY-MM-DD` text right now); My Auditions "upcoming vs in-progress" grouping; richer history. For standalone builds, add expo-image-picker permission strings to `app.json` config plugin.
+1. **Tap to view & edit an audition** — THE biggest remaining gap. Status is fixed at creation; there's NO way to advance Interested → Applied → Attended or edit fields without delete + re-add. Needs a detail/edit screen. (`updateAudition` already exists in the context.) NOTE: when a deadline is edited, the existing reminder should be cancelled + rescheduled (`cancelReminder` + `scheduleDeadlineReminder` in `lib/notifications.ts`).
+2. **Polish / later**: My Auditions "upcoming vs in-progress" grouping; richer history; for standalone builds add notification config + expo-image-picker permission strings to `app.json`; consider a development build for more reliable notifications.
+
+**Done since this file was first written:** onboarding, instrument dropdown, deadline alerts, calendar date picker (see "Added since first checkpoint" above).
 
 ## Working notes for the next agent
 

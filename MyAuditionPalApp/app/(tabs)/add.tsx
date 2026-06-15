@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DateField } from '@/components/date-field';
 import { ThemedText } from '@/components/themed-text';
 import { useAuditions } from '@/contexts/audition-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -153,10 +154,10 @@ export default function AddScreen() {
             placeholder="e.g. Section Cello" />
           <Field label="Location" value={location} onChangeText={setLocation}
             placeholder="e.g. Boston, MA" />
-          <Field label="Application deadline" value={applicationDeadline}
-            onChangeText={setApplicationDeadline} placeholder="YYYY-MM-DD" />
-          <Field label="Audition date" value={auditionDate} onChangeText={setAuditionDate}
-            placeholder="YYYY-MM-DD" />
+          <DateField label="Application deadline" value={applicationDeadline || undefined}
+            onChange={(iso) => setApplicationDeadline(iso ?? '')} placeholder="Select a date" />
+          <DateField label="Audition date" value={auditionDate || undefined}
+            onChange={(iso) => setAuditionDate(iso ?? '')} placeholder="Select a date" />
           <Field label="Repertoire" value={repertoire} onChangeText={setRepertoire}
             placeholder="Type pieces, or add a photo below" multiline />
 
