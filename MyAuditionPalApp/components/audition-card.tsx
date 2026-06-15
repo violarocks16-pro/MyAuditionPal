@@ -16,8 +16,8 @@ function relativeLabel(days: number | null): string {
 }
 
 /**
- * A single audition shown as a card. Used by both the My Auditions and History
- * tabs. If `onChangeStatus` is provided, the status badge becomes a dropdown.
+ * A single audition shown as a card, used by My Auditions and History.
+ * If `onChangeStatus` is provided, the status badge becomes a dropdown.
  */
 export function AuditionCard({
   audition,
@@ -31,16 +31,18 @@ export function AuditionCard({
   onPress?: () => void;
   onLongPress?: () => void;
   onChangeStatus?: (status: AuditionStatus) => void;
-  onMarkAttended?: (result?: string) => void; // enables the "Did you attend?" nudge
+  onMarkAttended?: (result?: string) => void;
   onDismissNudge?: () => void;
 }) {
   const surface = useThemeColor({}, 'surface');
   const border = useThemeColor({}, 'border');
   const primary = useThemeColor({}, 'primary');
+  const secondary = useThemeColor({}, 'secondary');
   const muted = useThemeColor({}, 'muted');
   const deadlineColor = useThemeColor({}, 'deadline');
   const background = useThemeColor({}, 'background');
   const text = useThemeColor({}, 'text');
+  const success = useThemeColor({}, 'success');
 
   const { width: screenWidth } = useWindowDimensions();
   const badgeRef = useRef<View>(null);
@@ -49,15 +51,8 @@ export function AuditionCard({
   const [resultOpen, setResultOpen] = useState(false);
   const [resultText, setResultText] = useState('');
 
-  function confirmAttended() {
-    onMarkAttended?.(resultText.trim() || undefined);
-    setResultOpen(false);
-    setResultText('');
-  }
-
   const MENU_WIDTH = 180;
 
-  // Measure the badge's on-screen position so the popover appears right under it.
   function openMenu() {
     badgeRef.current?.measureInWindow((x, y, width, height) => {
       const left = Math.min(Math.max(8, x + width - MENU_WIDTH), screenWidth - MENU_WIDTH - 8);
@@ -66,26 +61,40 @@ export function AuditionCard({
     });
   }
 
-  // Application deadline line, with an urgency hint. Only highlight when it's
-  // coming up (today through 7 days away) — not once it has already passed.
+  function confirmAttended() {
+    onMarkAttended?.(resultText.trim() || undefined);
+    setResultOpen(false);
+    setResultText('');
+  }
+
+  // Status badge colors: Interested = soft outline, Applied = pink, Attended = green.
+  const badge =
+    audition.status === 'applied'
+      ? { bg: primary, fg: text, bd: primary }
+      : audition.status === 'attended'
+        ? { bg: success, fg: '#fff', bd: success }
+        : { bg: 'transparent', fg: muted, bd: border };
+
+  // Application deadline line, highlighted only when coming up (today–7 days).
   let deadlineLine: string | null = null;
   let deadlineUrgent = false;
   if (audition.applicationDeadline) {
     const days = daysUntil(audition.applicationDeadline);
     const relative = relativeLabel(days);
-    deadlineLine = `Application deadline: ${formatIsoDate(audition.applicationDeadline)}${
-      relative ? ` (${relative})` : ''
+    deadlineLine = `⏳ Deadline ${formatIsoDate(audition.applicationDeadline)}${
+      relative ? ` · ${relative}` : ''
     }`;
     deadlineUrgent = days !== null && days >= 0 && days <= 7;
   }
 
   const auditionDateLine = audition.auditionDate
-    ? `Audition date: ${formatIsoDate(audition.auditionDate)}`
+    ? `🎭 Audition ${formatIsoDate(audition.auditionDate)}`
     : null;
 
-  // Show a gentle "Did you attend?" nudge once the audition date has passed
-  // (and it isn't already attended or previously dismissed).
-  const auditionPassed = audition.auditionDate ? (daysUntil(audition.auditionDate) ?? 0) < 0 : false;
+  // Show a "Did you attend?" nudge once the audition date has passed.
+  const auditionPassed = audition.auditionDate
+    ? (daysUntil(audition.auditionDate) ?? 0) < 0
+    : false;
   const showNudge =
     !!onMarkAttended &&
     audition.status !== 'attended' &&
@@ -102,35 +111,43 @@ export function AuditionCard({
         pressed && styles.pressed,
       ]}>
       <View style={styles.header}>
-        <ThemedText type="defaultSemiBold" style={styles.ensemble}>
-          {audition.ensemble}
-        </ThemedText>
+        <ThemedText style={styles.ensemble}>{audition.ensemble}</ThemedText>
         {onChangeStatus ? (
-          <Pressable ref={badgeRef} onPress={openMenu} style={[styles.badge, { backgroundColor: primary }]}>
-            <ThemedText style={styles.badgeText}>{STATUS_LABELS[audition.status]} ▾</ThemedText>
+          <Pressable
+            ref={badgeRef}
+            onPress={openMenu}
+            style={[styles.badge, { backgroundColor: badge.bg, borderColor: badge.bd }]}>
+            <ThemedText style={[styles.badgeText, { color: badge.fg }]}>
+              {STATUS_LABELS[audition.status]} ▾
+            </ThemedText>
           </Pressable>
         ) : (
-          <View style={[styles.badge, { backgroundColor: primary }]}>
-            <ThemedText style={styles.badgeText}>{STATUS_LABELS[audition.status]}</ThemedText>
+          <View style={[styles.badge, { backgroundColor: badge.bg, borderColor: badge.bd }]}>
+            <ThemedText style={[styles.badgeText, { color: badge.fg }]}>
+              {STATUS_LABELS[audition.status]}
+            </ThemedText>
           </View>
         )}
       </View>
 
-      <ThemedText>{audition.position}</ThemedText>
-      {audition.location ? (
-        <ThemedText style={[styles.meta, { color: muted }]}>{audition.location}</ThemedText>
-      ) : null}
-      {deadlineLine ? (
-        <ThemedText style={[styles.meta, { color: deadlineUrgent ? deadlineColor : muted }]}>
-          {deadlineLine}
-        </ThemedText>
-      ) : null}
-      {auditionDateLine ? (
-        <ThemedText style={[styles.meta, { color: muted }]}>{auditionDateLine}</ThemedText>
-      ) : null}
-      {audition.result ? (
-        <ThemedText style={[styles.meta, { color: muted }]}>Result: {audition.result}</ThemedText>
-      ) : null}
+      <ThemedText style={styles.position}>{audition.position}</ThemedText>
+
+      <View style={styles.meta}>
+        {audition.location ? (
+          <ThemedText style={[styles.metaLine, { color: muted }]}>📍 {audition.location}</ThemedText>
+        ) : null}
+        {deadlineLine ? (
+          <ThemedText style={[styles.metaLine, { color: deadlineUrgent ? deadlineColor : muted }]}>
+            {deadlineLine}
+          </ThemedText>
+        ) : null}
+        {auditionDateLine ? (
+          <ThemedText style={[styles.metaLine, { color: muted }]}>{auditionDateLine}</ThemedText>
+        ) : null}
+        {audition.result ? (
+          <ThemedText style={[styles.metaLine, { color: muted }]}>🏆 {audition.result}</ThemedText>
+        ) : null}
+      </View>
 
       {showNudge ? (
         <View style={[styles.nudge, { borderColor: border }]}>
@@ -140,10 +157,10 @@ export function AuditionCard({
               onPress={() => setResultOpen(true)}
               style={({ pressed }) => [
                 styles.nudgeYes,
-                { backgroundColor: primary },
+                { backgroundColor: secondary },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText style={styles.nudgeYesText}>Yes, attended</ThemedText>
+              <ThemedText style={[styles.actionText, { color: '#fff' }]}>Yes, attended</ThemedText>
             </Pressable>
             <Pressable onPress={onDismissNudge} hitSlop={6}>
               <ThemedText style={[styles.nudgeNot, { color: muted }]}>Not yet</ThemedText>
@@ -159,7 +176,7 @@ export function AuditionCard({
             style={[styles.resultSheet, { backgroundColor: background, borderColor: border }]}
             onPress={() => {}}>
             <ThemedText type="subtitle">How did it go?</ThemedText>
-            <ThemedText style={[styles.meta, { color: muted }]}>
+            <ThemedText style={[styles.metaLine, { color: muted }]}>
               Add a result (optional) — you can edit it later.
             </ThemedText>
             <TextInput
@@ -177,15 +194,16 @@ export function AuditionCard({
                 { backgroundColor: primary },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText style={[styles.nudgeYesText, { color: text }]}>Save</ThemedText>
+              <ThemedText style={[styles.actionText, { color: text }]}>Save</ThemedText>
             </Pressable>
           </Pressable>
         </Pressable>
       </Modal>
 
+      {/* Status dropdown popover */}
       {onChangeStatus ? (
         <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
-          <Pressable style={styles.backdrop} onPress={() => setMenuOpen(false)}>
+          <Pressable style={styles.menuBackdrop} onPress={() => setMenuOpen(false)}>
             <Pressable
               style={[
                 styles.menu,
@@ -223,49 +241,50 @@ export function AuditionCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
     padding: 16,
-    gap: 4,
+    gap: 6,
+    // soft floating shadow for a calm, raised feel
+    shadowColor: '#5a4a42',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  pressed: { opacity: 0.85 },
+  pressed: { opacity: 0.9 },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
   },
-  ensemble: { flex: 1, fontSize: 17 },
+  ensemble: { flex: 1, fontSize: 18, fontWeight: '700', lineHeight: 23 },
+  position: { fontSize: 15, marginTop: -2 },
+  meta: { gap: 3, marginTop: 4 },
+  metaLine: { fontSize: 14, lineHeight: 19 },
   badge: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderWidth: 1,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
   },
-  badgeText: { fontSize: 12, fontWeight: '600' },
-  meta: { fontSize: 14 },
-  nudge: {
-    marginTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 10,
-    gap: 8,
-  },
+  badgeText: { fontSize: 12, fontWeight: '700' },
+  actionText: { fontSize: 15, fontWeight: '700' },
+  // nudge
+  nudge: { marginTop: 12, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, gap: 10 },
   nudgeText: { fontSize: 14, fontWeight: '600' },
   nudgeButtons: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   nudgeYes: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  nudgeYesText: { fontSize: 13, fontWeight: '700' },
   nudgeNot: { fontSize: 13, fontWeight: '600' },
+  // result modal
   resultBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     padding: 28,
   },
-  resultSheet: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 20,
-    gap: 10,
-  },
+  resultSheet: { borderWidth: 1, borderRadius: 16, padding: 20, gap: 10 },
   resultInput: {
     borderWidth: 1,
     borderRadius: 12,
@@ -273,22 +292,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
   },
-  resultSave: {
-    marginTop: 4,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
+  resultSave: { marginTop: 4, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  // status popover
+  menuBackdrop: { flex: 1, backgroundColor: 'transparent' },
   menu: {
     position: 'absolute',
     borderWidth: 1,
     borderRadius: 12,
     overflow: 'hidden',
-    // soft shadow so it reads as a floating popover
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,

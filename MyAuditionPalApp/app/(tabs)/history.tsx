@@ -75,6 +75,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   emptyTitle: { textAlign: 'center' },
   emptyText: { textAlign: 'center', opacity: 0.7 },
-  list: { padding: 20, gap: 12 },
-  heading: { marginBottom: 4 },
+  list: { padding: 20, gap: 14 },
+  heading: { marginBottom: 8 },
 });

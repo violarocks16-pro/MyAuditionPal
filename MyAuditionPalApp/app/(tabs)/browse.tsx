@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ListingCard } from '@/components/listing-card';
@@ -12,7 +12,7 @@ import { Listing } from '@/types/listing';
 
 export default function BrowseScreen() {
   const { profile } = useProfile();
-  const { auditions, addAudition } = useAuditions();
+  const { auditions, addAudition, deleteAudition } = useAuditions();
 
   const background = useThemeColor({}, 'background');
   const muted = useThemeColor({}, 'muted');
@@ -60,6 +60,17 @@ export default function BrowseScreen() {
     });
   }
 
+  // Un-heart: delete the audition this listing created (with a confirm, since it
+  // may have your own edits by now).
+  function removeListing(listing: Listing) {
+    const existing = auditions.find((a) => a.sourceListingId === listing.id);
+    if (!existing) return;
+    Alert.alert('Remove from your auditions', `Remove "${listing.ensemble}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => deleteAudition(existing.id) },
+    ]);
+  }
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: background }]} edges={['top']}>
       {loading ? (
@@ -100,6 +111,7 @@ export default function BrowseScreen() {
               listing={item}
               added={addedIds.has(item.id)}
               onAdd={() => addListing(item)}
+              onRemove={() => removeListing(item)}
             />
           )}
         />
@@ -111,8 +123,8 @@ export default function BrowseScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { padding: 20, gap: 12 },
-  header: { gap: 4, marginBottom: 4 },
+  list: { padding: 20, gap: 14 },
+  header: { gap: 4, marginBottom: 8 },
   subtitle: { fontSize: 14 },
   empty: { textAlign: 'center', marginTop: 40, paddingHorizontal: 20 },
 });

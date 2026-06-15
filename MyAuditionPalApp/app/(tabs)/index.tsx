@@ -86,7 +86,7 @@ export default function MyAuditionsScreen() {
         }
         renderSectionHeader={({ section }) => (
           <ThemedText style={[styles.sectionHeader, { color: muted }]}>
-            {section.title.toUpperCase()}
+            {section.title.toUpperCase()} · {section.data.length}
           </ThemedText>
         )}
         renderItem={({ item }) => (
@@ -109,9 +109,9 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   emptyTitle: { textAlign: 'center' },
   emptyText: { textAlign: 'center', opacity: 0.7 },
-  list: { padding: 20, gap: 12 },
-  heading: { marginBottom: 4 },
-  sectionHeader: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 8 },
+  list: { padding: 20, gap: 14 },
+  heading: { marginBottom: 8 },
+  sectionHeader: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 10, marginBottom: 2 },
   button: {
     marginTop: 8,
     borderRadius: 14,
