@@ -70,6 +70,8 @@ In rough priority / as discussed with the user:
 
 The core Phase 1 tracking loop is complete and polished.
 
+**Branding (2026-06-14):** display name set to **MyAuditionPal** (`app.json` `expo.name`; `slug` left as `MyAuditionPalApp`). Custom **app icon** = cream 5-point star on dusty pink with a terracotta music note; all variants generated in `assets/images/` (icon, android foreground/background/monochrome, splash, favicon) from SVGs via `rsvg-convert` (librsvg). Adaptive-icon background + splash colors tied to the palette. NOTE: the custom icon/name only appear in a real build, not in Expo Go (which shows its own).
+
 ## Working notes for the next agent
 
 - The user is a **beginner** — explain each step in plain language, expect follow-up questions, and walk through anything they must run themselves (interactive terminal commands).
