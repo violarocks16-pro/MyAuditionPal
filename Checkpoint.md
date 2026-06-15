@@ -53,6 +53,14 @@ Everything persists across app restarts. `npx tsc --noEmit` is clean.
 
 ---
 
+## Phase 2 in progress — Discovery (curated) + Supabase
+
+**Browse/Discovery (2026-06-14):** new **🔎 Browse tab** (`app/(tabs)/browse.tsx`) shows audition listings filtered to the user's instrument; "♡ Add to Interested" creates an Interested audition (`sourceListingId` links it to the listing, prevents double-add, flips button to "✓ Added"). `components/listing-card.tsx`, `types/listing.ts`.
+
+**Supabase wired up (2026-06-14):** project `MyAuditionPal` (URL in `lib/supabase.ts`, publishable key — safe to ship, protected by RLS). `lib/listings.ts` reads the `listings` table (snake_case → camelCase mapping), filtered by instrument, with pull-to-refresh + loading/error states. Libs: `@supabase/supabase-js`, `react-native-url-polyfill`. The `listings` table has RLS allowing public SELECT only.
+
+**Listings sourcing = MANUAL CURATION** (user's choice). Real postings are hand-added to the Supabase `listings` table with a `url` back to the original. The user curates from: Musical Chairs, The Audition Cafe (login-gated), dbstrings, muvac (login-gated). A starter set of ~12 real viola listings from Musical Chairs was provided as SQL for the user to paste. NO scraping (respect ToS); link back instead. (Placeholder seed data + `constants/seed-listings.ts` were removed.)
+
 ## NEXT IDEAS (not yet built)
 
 In rough priority / as discussed with the user:
