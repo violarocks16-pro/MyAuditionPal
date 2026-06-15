@@ -6,6 +6,7 @@ import { ListingCard } from '@/components/listing-card';
 import { ThemedText } from '@/components/themed-text';
 import { useAuditions } from '@/contexts/audition-context';
 import { useProfile } from '@/contexts/profile-context';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { fetchListings } from '@/lib/listings';
 import { Listing } from '@/types/listing';
@@ -14,7 +15,8 @@ export default function BrowseScreen() {
   const { profile } = useProfile();
   const { auditions, addAudition, deleteAudition } = useAuditions();
 
-  const background = useThemeColor({}, 'background');
+  // Browse's own backdrop: light gray in light mode, black in dark mode.
+  const background = (useColorScheme() ?? 'light') === 'dark' ? '#000000' : '#F4F4F6';
   const muted = useThemeColor({}, 'muted');
   const deadline = useThemeColor({}, 'deadline');
 

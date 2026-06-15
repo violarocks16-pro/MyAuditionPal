@@ -1,6 +1,8 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { formatIsoDate } from '@/lib/date';
 import { Listing } from '@/types/listing';
@@ -17,56 +19,82 @@ export function ListingCard({
   onAdd: () => void;
   onRemove: () => void;
 }) {
-  const surface = useThemeColor({}, 'surface');
-  const border = useThemeColor({}, 'border');
-  const muted = useThemeColor({}, 'muted');
+  const dark = (useColorScheme() ?? 'light') === 'dark';
   const secondary = useThemeColor({}, 'secondary');
   const brightPink = '#EC4899';
 
+  // Browse uses its own scheme: light = white cards on gray; dark = gray cards on black.
+  const cardBg = dark ? '#2C2C2E' : '#FFFFFF';
+  const cardBorder = dark ? '#3A3A3C' : '#E8E8EA';
+  const bodyColor = dark ? '#FFFFFF' : '#000000'; // position
+  const metaColor = dark ? '#EBEBEB' : '#000000'; // meta text + icons
+
   // Location and pay share one line to keep cards short.
-  const facts = [listing.location ? `📍 ${listing.location}` : null, listing.pay ? `💰 ${listing.pay}` : null]
-    .filter(Boolean)
-    .join('   ');
+  const facts = [listing.location, listing.pay].filter(Boolean).join('  ·  ');
 
   return (
-    <View style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
-          <ThemedText style={styles.ensemble}>{listing.ensemble}</ThemedText>
-          <ThemedText style={styles.position}>{listing.position}</ThemedText>
+          <ThemedText style={[styles.ensemble, { color: brightPink }]}>{listing.ensemble}</ThemedText>
+          <ThemedText style={[styles.position, { color: bodyColor }]}>{listing.position}</ThemedText>
         </View>
         <Pressable onPress={added ? onRemove : onAdd} hitSlop={10} style={styles.heart}>
-          <ThemedText style={[styles.heartIcon, { color: added ? secondary : muted }]}>
+          <ThemedText style={[styles.heartIcon, { color: added ? secondary : metaColor }]}>
             {added ? '♥' : '♡'}
           </ThemedText>
         </Pressable>
       </View>
 
-      <View style={styles.meta}>
-        {facts ? <ThemedText style={[styles.metaLine, { color: muted }]}>{facts}</ThemedText> : null}
-        {listing.applicationDeadline ? (
-          <ThemedText style={[styles.metaLine, { color: muted }]}>
-            ⏳ Deadline {formatIsoDate(listing.applicationDeadline)}
-          </ThemedText>
-        ) : null}
-        {listing.auditionDate ? (
-          <ThemedText style={[styles.metaLine, { color: muted }]}>
-            🎭 Audition {formatIsoDate(listing.auditionDate)}
-          </ThemedText>
+      <View style={styles.body}>
+        <View style={styles.meta}>
+          {facts ? <MetaRow icon="map-marker-outline" text={facts} color={metaColor} /> : null}
+          {listing.applicationDeadline ? (
+            <MetaRow
+              icon="checkbox-marked-outline"
+              text={`Deadline ${formatIsoDate(listing.applicationDeadline)}`}
+              color={metaColor}
+            />
+          ) : null}
+          {listing.auditionDate ? (
+            <MetaRow
+              icon="music-note-outline"
+              text={`Audition ${formatIsoDate(listing.auditionDate)}`}
+              color={metaColor}
+            />
+          ) : null}
+        </View>
+
+        {listing.url ? (
+          <Pressable
+            onPress={() => Linking.openURL(listing.url!)}
+            style={({ pressed }) => [
+              styles.detailsButton,
+              { backgroundColor: cardBg, borderColor: brightPink },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText style={[styles.detailsText, { color: brightPink }]}>View Details</ThemedText>
+          </Pressable>
         ) : null}
       </View>
+    </View>
+  );
+}
 
-      {listing.url ? (
-        <Pressable
-          onPress={() => Linking.openURL(listing.url!)}
-          style={({ pressed }) => [
-            styles.detailsButton,
-            { backgroundColor: brightPink },
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText style={styles.detailsText}>View Details</ThemedText>
-        </Pressable>
-      ) : null}
+/** One meta line with a leading outline icon (location / deadline / audition). */
+function MetaRow({
+  icon,
+  text,
+  color,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  text: string;
+  color: string;
+}) {
+  return (
+    <View style={styles.metaRow}>
+      <MaterialCommunityIcons name={icon} size={15} color={color} />
+      <ThemedText style={[styles.metaLine, { color }]}>{text}</ThemedText>
     </View>
   );
 }
@@ -90,15 +118,16 @@ const styles = StyleSheet.create({
   position: { fontSize: 14 },
   heart: { paddingLeft: 4 },
   heartIcon: { fontSize: 26, lineHeight: 28 },
-  meta: { gap: 2, marginTop: 4 },
-  metaLine: { fontSize: 13, lineHeight: 18 },
+  body: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 },
+  meta: { flex: 1, gap: 4 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaLine: { fontSize: 13, lineHeight: 18, flexShrink: 1 },
   detailsButton: {
-    alignSelf: 'flex-start',
-    marginTop: 10,
     borderRadius: 10,
+    borderWidth: 1.5,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  detailsText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  detailsText: { fontSize: 13, fontWeight: '700' },
   pressed: { opacity: 0.85 },
 });
