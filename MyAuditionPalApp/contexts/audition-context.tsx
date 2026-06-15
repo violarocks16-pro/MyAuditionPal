@@ -94,10 +94,26 @@ export function AuditionProvider({ children }: { children: React.ReactNode }) {
 
   const updateAudition = useCallback((id: string, changes: Partial<Audition>) => {
     setAuditions((current) => {
-      const next = current.map((a) =>
-        a.id === id ? { ...a, ...changes, updatedAt: new Date().toISOString() } : a
-      );
+      const existing = current.find((a) => a.id === id);
+      if (!existing) return current;
+
+      const updated: Audition = { ...existing, ...changes, updatedAt: new Date().toISOString() };
+      const next = current.map((a) => (a.id === id ? updated : a));
       saveAuditions(next);
+
+      // Reconcile the deadline reminder: cancel the old one and schedule a fresh
+      // one for the updated record, then store the new id (or clear it).
+      cancelReminder(existing.reminderNotificationId);
+      scheduleDeadlineReminder(updated).then((notificationId) => {
+        setAuditions((cur) => {
+          const reconciled = cur.map((a) =>
+            a.id === id ? { ...a, reminderNotificationId: notificationId ?? undefined } : a
+          );
+          saveAuditions(reconciled);
+          return reconciled;
+        });
+      });
+
       return next;
     });
   }, []);

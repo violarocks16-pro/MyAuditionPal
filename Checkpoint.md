@@ -57,10 +57,10 @@ Everything persists across app restarts. `npx tsc --noEmit` is clean.
 
 In rough priority / as discussed with the user:
 
-1. **Tap to view & edit an audition** — THE biggest remaining gap. Status is fixed at creation; there's NO way to advance Interested → Applied → Attended or edit fields without delete + re-add. Needs a detail/edit screen. (`updateAudition` already exists in the context.) NOTE: when a deadline is edited, the existing reminder should be cancelled + rescheduled (`cancelReminder` + `scheduleDeadlineReminder` in `lib/notifications.ts`).
-2. **Polish / later**: My Auditions "upcoming vs in-progress" grouping; richer history; for standalone builds add notification config + expo-image-picker permission strings to `app.json`; consider a development build for more reliable notifications.
+1. **Polish / later**: My Auditions "upcoming vs in-progress" grouping; richer history; for standalone builds add notification config + expo-image-picker permission strings to `app.json`; consider a development build for more reliable notifications.
+2. **Phase 2 (per ImplementationPlan)**: Supabase + accounts + cloud sync.
 
-**Done since this file was first written:** onboarding, instrument dropdown, deadline alerts, calendar date picker (see "Added since first checkpoint" above).
+**Done since this file was first written:** onboarding, instrument dropdown, deadline alerts, calendar date picker, and **tap-to-edit** — tapping a card opens `app/audition/[id].tsx`; Add + Edit share `components/audition-form.tsx`; `updateAudition` reconciles the deadline reminder. The core Phase 1 tracking loop is complete.
 
 ## Working notes for the next agent
 

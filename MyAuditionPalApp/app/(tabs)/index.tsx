@@ -63,6 +63,7 @@ export default function MyAuditionsScreen() {
           renderItem={({ item }) => (
             <AuditionCard
               audition={item}
+              onPress={() => router.push(`/audition/${item.id}`)}
               onLongPress={() => confirmDelete(item.id, item.ensemble)}
             />
           )}
