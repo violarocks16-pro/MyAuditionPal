@@ -24,6 +24,7 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const background = useThemeColor({}, 'background');
   const surface = useThemeColor({}, 'surface');
@@ -32,6 +33,7 @@ export default function SignInScreen() {
   const muted = useThemeColor({}, 'muted');
   const text = useThemeColor({}, 'text');
   const deadline = useThemeColor({}, 'deadline');
+  const success = useThemeColor({}, 'success');
 
   async function submit() {
     if (!email.trim() || !password) {
@@ -40,10 +42,18 @@ export default function SignInScreen() {
     }
     setBusy(true);
     setError(null);
+    setNotice(null);
     const result = mode === 'signin' ? await signIn(email, password) : await signUp(email, password);
     setBusy(false);
     if (result.error) {
       setError(result.error);
+      return;
+    }
+    if (mode === 'signup' && result.needsConfirmation) {
+      // Account created but must be confirmed via email before signing in.
+      setNotice('Check your email to confirm your account, then sign in.');
+      setMode('signin');
+      setPassword('');
       return;
     }
     router.back();
@@ -88,6 +98,7 @@ export default function SignInScreen() {
           />
 
           {error ? <ThemedText style={{ color: deadline }}>{error}</ThemedText> : null}
+          {notice ? <ThemedText style={{ color: success }}>{notice}</ThemedText> : null}
 
           <Pressable
             onPress={submit}
@@ -110,6 +121,7 @@ export default function SignInScreen() {
             onPress={() => {
               setMode(mode === 'signin' ? 'signup' : 'signin');
               setError(null);
+              setNotice(null);
             }}
             hitSlop={8}>
             <ThemedText style={[styles.toggle, { color: muted }]}>

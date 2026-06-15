@@ -10,7 +10,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase';
 
-type AuthResult = { error?: string };
+type AuthResult = { error?: string; needsConfirmation?: boolean };
 
 type AuthContextValue = {
   session: Session | null;
@@ -44,8 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUp(email: string, password: string): Promise<AuthResult> {
-    const { error } = await supabase.auth.signUp({ email: email.trim(), password });
-    return { error: error?.message };
+    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+    if (error) return { error: error.message };
+    // If email confirmation is on, no session is returned until the user confirms.
+    return { needsConfirmation: !data.session };
   }
 
   async function signOut(): Promise<void> {
