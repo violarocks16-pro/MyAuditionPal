@@ -14,7 +14,7 @@ function sortKey(audition: Audition): string {
 }
 
 export default function HistoryScreen() {
-  const { auditions, loading, deleteAudition } = useAuditions();
+  const { auditions, loading, deleteAudition, updateAudition } = useAuditions();
   const router = useRouter();
 
   const background = useThemeColor({}, 'background');
@@ -61,6 +61,7 @@ export default function HistoryScreen() {
               audition={item}
               onPress={() => router.push(`/audition/${item.id}`)}
               onLongPress={() => confirmDelete(item.id, item.ensemble)}
+              onChangeStatus={(status) => updateAudition(item.id, { status })}
             />
           )}
         />

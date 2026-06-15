@@ -31,6 +31,7 @@ export interface Audition {
   repertoirePhotoUri?: string; // saved photo of the rep list (instead of typing it all)
   notes?: string; // private notes
   reminderNotificationId?: string; // id of the scheduled deadline reminder, if any
+  attendNudgeDismissed?: boolean; // user tapped "Not yet" on the "Did you attend?" nudge
   createdAt: string; // ISO timestamp — when the record was made
   updatedAt: string; // ISO timestamp — last time it changed
 }

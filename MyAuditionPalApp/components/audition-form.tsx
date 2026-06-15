@@ -127,6 +127,19 @@ export function AuditionForm({
       status,
       result: status === 'attended' ? orUndefined(result) : undefined,
     });
+
+    // Clear the form after saving. On the Add screen this empties it for the next
+    // entry; on the Edit screen we navigate away, so this has no visible effect.
+    setEnsemble('');
+    setPosition('');
+    setLocation('');
+    setApplicationDeadline('');
+    setAuditionDate('');
+    setRepertoire('');
+    setRepertoirePhotoUri(undefined);
+    setNotes('');
+    setStatus('interested');
+    setResult('');
   }
 
   return (

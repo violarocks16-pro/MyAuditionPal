@@ -60,7 +60,15 @@ In rough priority / as discussed with the user:
 1. **Polish / later**: My Auditions "upcoming vs in-progress" grouping; richer history; for standalone builds add notification config + expo-image-picker permission strings to `app.json`; consider a development build for more reliable notifications.
 2. **Phase 2 (per ImplementationPlan)**: Supabase + accounts + cloud sync.
 
-**Done since this file was first written:** onboarding, instrument dropdown, deadline alerts, calendar date picker, and **tap-to-edit** — tapping a card opens `app/audition/[id].tsx`; Add + Edit share `components/audition-form.tsx`; `updateAudition` reconciles the deadline reminder. The core Phase 1 tracking loop is complete.
+**Done since this file was first written:** onboarding, instrument dropdown, deadline alerts, calendar date picker, **tap-to-edit** (`app/audition/[id].tsx`; Add + Edit share `components/audition-form.tsx`; `updateAudition` reconciles the deadline reminder), and a **My Auditions polish pass**:
+- Cards grouped into **Interested / Applied** sections (status-based), sorted soonest-date-first.
+- Status badge is a **dropdown popover** (anchored under the badge via `measureInWindow`) on both My Auditions and History cards — changing status moves the card between tabs.
+- Cards show separate **"Application deadline"** and **"Audition date"** lines; deadline within 7 days is highlighted in `deadline` color, but **past deadlines are not colored**.
+- **"Did you attend?"** nudge appears on active cards whose audition date has passed (unless `attendNudgeDismissed`). "Yes, attended" opens a **"How did it go?"** result box → sets status `attended` + `result` and moves to History.
+- Add form **clears after saving**.
+- Theme gained a `success` green (currently unused after the checkbox was replaced by the dropdown).
+
+The core Phase 1 tracking loop is complete and polished.
 
 ## Working notes for the next agent
 

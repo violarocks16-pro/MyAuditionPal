@@ -44,3 +44,17 @@ export function isoToDate(iso: string): Date {
   if (!year || !month || !day) return new Date();
   return new Date(year, month - 1, day);
 }
+
+/**
+ * Whole days from today until the given date (negative = in the past).
+ * e.g. today -> 0, tomorrow -> 1, yesterday -> -1. Null if unparseable.
+ */
+export function daysUntil(iso: string): number | null {
+  const [year, month, day] = iso.split('-').map(Number);
+  if (!year || !month || !day) return null;
+  const target = new Date(year, month - 1, day);
+  target.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
