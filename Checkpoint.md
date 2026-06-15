@@ -56,7 +56,7 @@ Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the
 
 ### Supabase project
 - Tables: **`listings`** (RLS: public SELECT only) and **`auditions`** (RLS: per-user — `auth.uid() = user_id`, full CRUD for the owner).
-- ⚠️ **ACTION ITEM:** Email confirmation was turned OFF for testing and the user is **re-enabling it** (Authentication → Sign In / Providers → Email → "Confirm email"). The app already handles the confirm flow.
+- ✅ **Email confirmation is ON.** Site URL set to the GitHub repo as a valid redirect (Authentication → URL Configuration), so the confirm link lands on a real page instead of erroring. Confirm → return to app → sign in works. The app handles the confirm flow. (For real launch: a custom SMTP + a proper "confirmed" landing page — see next ideas.)
 
 ---
 
@@ -66,7 +66,7 @@ Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the
 - **Social login (Google/Apple) deferred to the dev-build phase** (Apple also needs a paid Apple Developer account). — memory `social-login-deferred`.
 
 ## Known limitations / NEXT IDEAS
-1. **Re-enable email confirmation** in Supabase (in progress) — and for real launch, connect a custom SMTP (free tier email is rate-limited).
+1. **For real launch:** connect a custom SMTP (free-tier email is rate-limited) and a proper "you're confirmed — return to the app" landing page (or deep link, once there's a dev build). Email confirmation itself is already on and working.
 2. **Development build** — unlocks: native **Google + Apple sign-in**, rock-solid notifications, App Store distribution. Apple needs the $99/yr Apple Developer account. (User has deferred this; revisit when heading to release.)
 3. **Repertoire photo sync** across devices — currently a local file URI; would need Supabase Storage upload.
 4. **Offline resilience** for signed-in writes (currently a failed cloud write just logs a warning).
