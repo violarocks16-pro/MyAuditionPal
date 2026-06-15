@@ -1,94 +1,79 @@
 # MyAuditionPal — Checkpoint / Handoff
 
-_Last updated: 2026-06-14_
-_Purpose: A handoff for the next agent. Read this first, then `Planning/ImplementationPlan.md` and `Planning/Ideas.md` for full context._
+_Last updated: 2026-06-15_
+_Purpose: A handoff for the next agent. Read this first, then `Planning/ImplementationPlan.md` and `Planning/Ideas.md` for the original vision._
+
+GitHub: https://github.com/violarocks16-pro/MyAuditionPal (branch `main`; latest commit `60fe328`).
 
 ---
 
-## What this app is (one paragraph)
+## What this app is
 
-A mobile app for classical musicians to **track auditions** (the core value) and build a permanent **history** of every audition taken. Built by a **solo, beginner developer** on a MacBook who wants detailed, plain-language explanations and room to ask questions. Free at launch; discovery/web-scraping is deferred to a later phase. Primary target: iOS first (via Expo Go for now), then Android.
+A mobile app for classical musicians to **track auditions** (the day-to-day core), keep a permanent **history**, and **discover** real audition listings filtered to their instrument. Built by a **solo, beginner developer** on a MacBook who wants plain-language explanations and room to ask questions. Free at launch. Primary target: iOS first (via Expo Go for now), then Android.
 
-## Tech stack (confirmed)
+## Tech stack
 
 - **React Native + Expo (SDK 54) + TypeScript**, expo-router (file-based routing).
-- **On-device storage** via AsyncStorage (no backend yet). Supabase + accounts planned for Phase 2.
-- App lives in **`MyAuditionPalApp/`** (subfolder); planning docs in **`Planning/`**.
-- ⚠️ **Pinned to Expo SDK 54 on purpose** — the user's App Store Expo Go only supports SDK 54; newer SDKs (55/56) fail with "incompatible version." Do NOT upgrade the SDK unless their Expo Go supports it.
-- ⚠️ **After any `npx expo install`, do a clean restart**: `Ctrl+C` → `npx expo start -c` → fully close & reopen Expo Go. (A stale app once made a tab "disappear.")
+- **Supabase** backend: Postgres (listings + auditions tables) + Auth (email/password). Client in `lib/supabase.ts` (publishable key — safe to ship; protected by RLS).
+- **Local storage** (AsyncStorage) for guest data + profile; cloud takes over when signed in.
+- App lives in **`MyAuditionPalApp/`**; planning docs in **`Planning/`**.
+
+### ⚠️ Gotchas (important)
+- **Pinned to Expo SDK 54 on purpose** — the user's App Store Expo Go supports SDK 54; newer SDKs fail with "incompatible version." Don't upgrade unless their Expo Go supports it.
+- **After any `npx expo install`, do a clean restart**: `Ctrl+C` → `npx expo start -c` → fully close & reopen Expo Go. (A stale app once made a tab "disappear.")
+- **Connect in Expo Go via "Enter URL manually"** (`exp://…`) — the QR was finicky on this machine.
+- Run `npx tsc --noEmit` after changes; it's been kept green throughout.
 
 ## How to run it
-
 ```bash
 cd MyAuditionPalApp
-npx expo start          # then connect in Expo Go
-# In Expo Go: "Enter URL manually" with the exp://... address is the most reliable
-# (the QR was finicky on this machine)
+npx expo start
 ```
-Typecheck before declaring done: `npx tsc --noEmit` (kept clean throughout).
 
 ---
 
-## Status — DONE so far
+## Status — what's DONE
 
-**Phase 0 — Setup ✅**
-- Homebrew, Node 26, VS Code installed. Expo project created (SDK 54). Runs on the user's phone via Expo Go. Live edit→reload loop confirmed.
-- Calm **color palette** (warm whites / beiges / dusty pinks) in `MyAuditionPalApp/constants/theme.ts` — light + warm dark variants. Extra named colors: `surface, primary, secondary, deadline, border, muted`.
+### Phase 0 — Setup ✅
+Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the user's phone. Calm **color palette** (warm whites / beiges / dusty pinks, + `success` green) in `constants/theme.ts` — light + warm dark variants.
 
-**Phase 1 core ✅**
-- **Data model** `types/audition.ts`: `Audition` record with status lifecycle **Interested → Applied → Attended** (simplified by user from the original 5-stage idea). `result` is **free text** (e.g. "semi-finals"), shown only when status is Attended. Includes `repertoirePhotoUri`. Helpers: `STATUS_ORDER`, `STATUS_LABELS`, `isActive()` (active = not yet attended).
-- **Storage + shared state**: `lib/storage.ts` (the only file that touches AsyncStorage) + `lib/id.ts`. Auditions via `contexts/audition-context.tsx` (`useAuditions()` → `auditions, loading, addAudition, updateAudition, deleteAudition`). Profile via `contexts/profile-context.tsx` (`useProfile()` → `profile, loading, setInstrument`). Both providers wrap the app in `app/_layout.tsx`.
-- **Four tabs** (`app/(tabs)/`): 🎯 My Auditions (`index.tsx`), ➕ Add (`add.tsx`), 📜 History (`history.tsx`), 👤 Profile (`profile.tsx`).
-  - **Add**: full form, ensemble/position required; optional location/dates/repertoire/notes; status chips; optional Result box (when Attended); **repertoire photo** (take/upload via expo-image-picker, copied to doc dir via expo-file-system/legacy); validation; saves + redirects.
-  - **My Auditions**: lists active auditions, reusable `components/audition-card.tsx`, loading + empty states, long-press to delete.
-  - **History**: lists attended auditions newest-first, reuses the card.
-  - **Profile**: instrument picker (`constants/instruments.ts`), persists choice.
+### Phase 1 — Tracking ✅
+- **Data model** `types/audition.ts`: status lifecycle **Interested → Applied → Attended** (simplified from the original 5-stage idea). `result` is free text (e.g. "semi-finals"), shown when Attended. `isActive()` = not yet attended. Fields incl. `repertoirePhotoUri`, `reminderNotificationId`, `attendNudgeDismissed`, `sourceListingId`.
+- **Five tabs** (`app/(tabs)/`): 🎯 My Auditions (`index.tsx`), 🔎 Browse (`browse.tsx`), ➕ Add (`add.tsx`), 📜 History (`history.tsx`), 👤 Profile (`profile.tsx`).
+- **Add/Edit** share `components/audition-form.tsx`. Tap a card → edit screen `app/audition/[id].tsx` (change status, edit fields, delete). Form clears after saving.
+- **My Auditions**: grouped **Interested / Applied** sections, soonest-deadline first. Cards (`components/audition-card.tsx`) show separate "Application deadline" + "Audition date" lines (deadline highlighted within 7 days, not when past); **status badge is a dropdown popover** (also on History); **"Did you attend?"** nudge on past-date cards → "How did it go?" result box → moves to History. Long-press to delete.
+- **History**: attended auditions, newest first; reuses the card.
+- **Onboarding** (`app/onboarding.tsx`): first launch with no instrument → instrument **dropdown** (`components/instrument-dropdown.tsx`); then the My Auditions empty-state prompt.
+- **Deadline reminders** `lib/notifications.ts` (expo-notifications): local reminder at 9 AM the day before `applicationDeadline`; id stored on the audition, cancelled/rescheduled on edit/delete.
+- **Calendar date picker** `components/date-field.tsx` (@react-native-community/datetimepicker); dates stored `YYYY-MM-DD`, shown "Month D, YYYY" via `lib/date.ts`.
+- **Branding**: display name **MyAuditionPal** (`app.json`); custom **app icon** (cream 5-point star on dusty pink + terracotta note) — all variants in `assets/images/`, generated from SVGs via `rsvg-convert` (librsvg). Icon/name only show in a real build, not Expo Go.
 
-Everything persists across app restarts. `npx tsc --noEmit` is clean.
+### Phase 2 — Discovery + Accounts + Cloud sync ✅
+- **Browse/Discovery** (`app/(tabs)/browse.tsx`, `components/listing-card.tsx`, `types/listing.ts`): lists audition postings filtered to the user's instrument; "♡ Add to Interested" creates an Interested audition linked via `sourceListingId` (prevents double-add). Reads live from Supabase via `lib/listings.ts` (pull-to-refresh, loading/error states).
+- **Listings data — MANUAL CURATION** (user's choice; no scraping, link back to source). The Supabase `listings` table holds **real postings across ~14 instruments** (violin, viola, cello, double bass, flute, oboe, clarinet, bassoon, french horn, trumpet, trombone, bass trombone, percussion, timpani, + 1 harp), curated from **Musical Chairs** (plus a few CSO/BSO/Indianapolis/Houston direct links), each with a `url` back. Many have real `audition_date`s pulled from detail pages; the rest are genuinely TBD. Sources the user uses: Musical Chairs, The Audition Cafe (login), dbstrings, muvac (login).
+- **Accounts** — Supabase email/password. `contexts/auth-context.tsx` (`useAuth()`), `app/sign-in.tsx` modal, Account section on Profile. Session persists (AsyncStorage + AppState auto-refresh in `lib/supabase.ts`). Sign-up handles email confirmation (shows "check your email" when a confirmation is required). Guest mode is the default.
+- **Cloud sync** — `lib/cloud-auditions.ts` + auth-aware `contexts/audition-context.tsx`: guest → local; signed in → Supabase `auditions` table. On first sign-in, local auditions migrate up, then local clears **only after a confirmed cloud write** (a bug that cleared unconditionally and lost data when the table was missing has been fixed).
 
-**Added since first checkpoint (2026-06-14):**
-- **Onboarding first-run flow**: no instrument saved → `app/(tabs)/_layout.tsx` redirects to `app/onboarding.tsx`. Instrument chosen via reusable **dropdown** `components/instrument-dropdown.tsx` (Modal-based, used on onboarding + Profile).
-- **Deadline reminders**: `lib/notifications.ts` (expo-notifications) schedules a local reminder at 9 AM the day before `applicationDeadline`; id stored on the audition, cancelled on delete; wired into the audition context. (Tested working via a temporary test-mode that has since been removed.)
-- **Calendar date picker**: `components/date-field.tsx` (@react-native-community/datetimepicker). Dates stored as `YYYY-MM-DD`, displayed spelled-out "Month D, YYYY" via `lib/date.ts` (form + cards).
+### Supabase project
+- Tables: **`listings`** (RLS: public SELECT only) and **`auditions`** (RLS: per-user — `auth.uid() = user_id`, full CRUD for the owner).
+- ⚠️ **ACTION ITEM:** Email confirmation was turned OFF for testing and the user is **re-enabling it** (Authentication → Sign In / Providers → Email → "Confirm email"). The app already handles the confirm flow.
 
 ---
 
-## Phase 2 in progress — Discovery (curated) + Supabase
+## Decisions on record
+- **SDK 54 pin** (Expo Go compatibility). — see memory `expo-go-sdk-pin`.
+- **Manual curation** of listings, link back, no scraping. — memory `audition-listing-sources`.
+- **Social login (Google/Apple) deferred to the dev-build phase** (Apple also needs a paid Apple Developer account). — memory `social-login-deferred`.
 
-**Browse/Discovery (2026-06-14):** new **🔎 Browse tab** (`app/(tabs)/browse.tsx`) shows audition listings filtered to the user's instrument; "♡ Add to Interested" creates an Interested audition (`sourceListingId` links it to the listing, prevents double-add, flips button to "✓ Added"). `components/listing-card.tsx`, `types/listing.ts`.
-
-**Supabase wired up (2026-06-14):** project `MyAuditionPal` (URL in `lib/supabase.ts`, publishable key — safe to ship, protected by RLS). `lib/listings.ts` reads the `listings` table (snake_case → camelCase mapping), filtered by instrument, with pull-to-refresh + loading/error states. Libs: `@supabase/supabase-js`, `react-native-url-polyfill`. The `listings` table has RLS allowing public SELECT only.
-
-**Listings sourcing = MANUAL CURATION** (user's choice). Real postings are hand-added to the Supabase `listings` table with a `url` back to the original. The user curates from: Musical Chairs, The Audition Cafe (login-gated), dbstrings, muvac (login-gated). A starter set of ~12 real viola listings from Musical Chairs was provided as SQL for the user to paste. NO scraping (respect ToS); link back instead. (Placeholder seed data + `constants/seed-listings.ts` were removed.)
-
-## Phase 2 — Accounts + cloud sync (DONE 2026-06-15)
-
-- **Auth:** Supabase email+password. `contexts/auth-context.tsx` (`useAuth()` → session, signIn, signUp, signOut). `app/sign-in.tsx` modal. `lib/supabase.ts` now persists the session via AsyncStorage + AppState auto-refresh. AuthProvider wraps everything in `app/_layout.tsx`. Profile tab has an Account section (sign in/out). Email confirmation was disabled in the Supabase dashboard for testing — RE-ENABLE before real launch. Social (Apple/Google) login deferred (needs a dev build).
-- **Cloud sync:** `lib/cloud-auditions.ts` (reads/writes the `auditions` table, snake_case↔camelCase). `contexts/audition-context.tsx` is now auth-aware: guest → local AsyncStorage; signed in → Supabase. On first sign-in, local auditions migrate up, then local is cleared **only after a confirmed successful cloud write** (an earlier version cleared unconditionally and lost data when the table was missing — fixed). `auditions` table has per-user RLS (auth.uid() = user_id).
-- **Known limitations:** repertoire photos don't sync across devices (local file URI; would need Supabase Storage); offline writes just log a warning (no offline queue).
-
-## NEXT IDEAS (not yet built)
-
-In rough priority / as discussed with the user:
-
-1. **Polish / later**: My Auditions "upcoming vs in-progress" grouping; richer history; for standalone builds add notification config + expo-image-picker permission strings to `app.json`; consider a development build for more reliable notifications.
-2. **Phase 2 (per ImplementationPlan)**: Supabase + accounts + cloud sync.
-
-**Done since this file was first written:** onboarding, instrument dropdown, deadline alerts, calendar date picker, **tap-to-edit** (`app/audition/[id].tsx`; Add + Edit share `components/audition-form.tsx`; `updateAudition` reconciles the deadline reminder), and a **My Auditions polish pass**:
-- Cards grouped into **Interested / Applied** sections (status-based), sorted soonest-date-first.
-- Status badge is a **dropdown popover** (anchored under the badge via `measureInWindow`) on both My Auditions and History cards — changing status moves the card between tabs.
-- Cards show separate **"Application deadline"** and **"Audition date"** lines; deadline within 7 days is highlighted in `deadline` color, but **past deadlines are not colored**.
-- **"Did you attend?"** nudge appears on active cards whose audition date has passed (unless `attendNudgeDismissed`). "Yes, attended" opens a **"How did it go?"** result box → sets status `attended` + `result` and moves to History.
-- Add form **clears after saving**.
-- Theme gained a `success` green (currently unused after the checkbox was replaced by the dropdown).
-
-The core Phase 1 tracking loop is complete and polished.
-
-**Branding (2026-06-14):** display name set to **MyAuditionPal** (`app.json` `expo.name`; `slug` left as `MyAuditionPalApp`). Custom **app icon** = cream 5-point star on dusty pink with a terracotta music note; all variants generated in `assets/images/` (icon, android foreground/background/monochrome, splash, favicon) from SVGs via `rsvg-convert` (librsvg). Adaptive-icon background + splash colors tied to the palette. NOTE: the custom icon/name only appear in a real build, not in Expo Go (which shows its own).
+## Known limitations / NEXT IDEAS
+1. **Re-enable email confirmation** in Supabase (in progress) — and for real launch, connect a custom SMTP (free tier email is rate-limited).
+2. **Development build** — unlocks: native **Google + Apple sign-in**, rock-solid notifications, App Store distribution. Apple needs the $99/yr Apple Developer account. (User has deferred this; revisit when heading to release.)
+3. **Repertoire photo sync** across devices — currently a local file URI; would need Supabase Storage upload.
+4. **Offline resilience** for signed-in writes (currently a failed cloud write just logs a warning).
+5. **Listings growth** — more instruments/refresh over time; possibly user-submitted or (carefully, ToS permitting) automated later. For standalone builds, add notification config + expo-image-picker permission strings to `app.json`.
 
 ## Working notes for the next agent
-
-- The user is a **beginner** — explain each step in plain language, expect follow-up questions, and walk through anything they must run themselves (interactive terminal commands).
+- The user is a **beginner** — explain in plain language, expect questions, and walk through anything they must run themselves (interactive logins, Supabase SQL Editor pastes, etc.). The app can't write to Supabase tables from the dev machine (RLS/anon key is read-only); schema/data changes go through the SQL Editor.
 - Keep files small and readable with teaching comments (matches the established style).
-- Run `npx tsc --noEmit` after changes; keep it green.
-- More context lives in the agent memory (MEMORY.md): SDK pin, restart-after-install, user dev experience, tech stack.
+- Commit/push only when asked; end commit messages with the Co-Authored-By trailer. `node_modules` is gitignored — verify it's never staged.
+- More context in agent memory (`MEMORY.md`): SDK pin, restart-after-install, listing sources, social-login-deferred, user dev experience, tech stack, project overview.
