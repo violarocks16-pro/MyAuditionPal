@@ -40,6 +40,15 @@ export async function saveAuditions(auditions: Audition[]): Promise<void> {
   }
 }
 
+/** Remove all locally-stored auditions (after they've been migrated to the cloud). */
+export async function clearAuditions(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.warn('Could not clear local auditions:', error);
+  }
+}
+
 /** Load the saved profile. Returns an empty profile if there's nothing yet. */
 export async function loadProfile(): Promise<Profile> {
   try {

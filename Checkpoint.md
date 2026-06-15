@@ -61,6 +61,12 @@ Everything persists across app restarts. `npx tsc --noEmit` is clean.
 
 **Listings sourcing = MANUAL CURATION** (user's choice). Real postings are hand-added to the Supabase `listings` table with a `url` back to the original. The user curates from: Musical Chairs, The Audition Cafe (login-gated), dbstrings, muvac (login-gated). A starter set of ~12 real viola listings from Musical Chairs was provided as SQL for the user to paste. NO scraping (respect ToS); link back instead. (Placeholder seed data + `constants/seed-listings.ts` were removed.)
 
+## Phase 2 — Accounts + cloud sync (DONE 2026-06-15)
+
+- **Auth:** Supabase email+password. `contexts/auth-context.tsx` (`useAuth()` → session, signIn, signUp, signOut). `app/sign-in.tsx` modal. `lib/supabase.ts` now persists the session via AsyncStorage + AppState auto-refresh. AuthProvider wraps everything in `app/_layout.tsx`. Profile tab has an Account section (sign in/out). Email confirmation was disabled in the Supabase dashboard for testing — RE-ENABLE before real launch. Social (Apple/Google) login deferred (needs a dev build).
+- **Cloud sync:** `lib/cloud-auditions.ts` (reads/writes the `auditions` table, snake_case↔camelCase). `contexts/audition-context.tsx` is now auth-aware: guest → local AsyncStorage; signed in → Supabase. On first sign-in, local auditions migrate up, then local is cleared **only after a confirmed successful cloud write** (an earlier version cleared unconditionally and lost data when the table was missing — fixed). `auditions` table has per-user RLS (auth.uid() = user_id).
+- **Known limitations:** repertoire photos don't sync across devices (local file URI; would need Supabase Storage); offline writes just log a warning (no offline queue).
+
 ## NEXT IDEAS (not yet built)
 
 In rough priority / as discussed with the user:

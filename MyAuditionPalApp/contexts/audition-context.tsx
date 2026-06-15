@@ -1,30 +1,32 @@
 /**
- * The audition "brain" for the whole app.
+ * The audition "brain" for the whole app — now cloud-aware.
  *
- * A React Context lets many screens share the same data without passing it down
- * by hand. We wrap the app in <AuditionProvider> (see app/_layout.tsx), and then
- * ANY screen can call useAuditions() to read the list or change it.
+ * - Guest (not signed in): auditions live on the device (AsyncStorage), as before.
+ * - Signed in: auditions live in the user's Supabase account and sync across devices.
+ * - On first sign-in, any local guest auditions are migrated up to the account,
+ *   then the local copy is cleared.
  *
- * The list lives in React state (so the UI updates instantly), and every change
- * is also written to the phone via lib/storage so it survives closing the app.
+ * Deadline reminders are scheduled on the device in both modes.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
+import { useAuth } from '@/contexts/auth-context';
+import {
+  deleteCloudAudition,
+  fetchCloudAuditions,
+  upsertCloudAudition,
+  upsertManyCloudAuditions,
+} from '@/lib/cloud-auditions';
 import { createId } from '@/lib/id';
 import {
   cancelReminder,
   configureNotifications,
   scheduleDeadlineReminder,
 } from '@/lib/notifications';
-import { loadAuditions, saveAuditions } from '@/lib/storage';
+import { clearAuditions, loadAuditions, saveAuditions } from '@/lib/storage';
 import { Audition, AuditionStatus } from '@/types/audition';
 
-/**
- * What the Add form provides when creating an audition: everything except the
- * fields the app fills in itself (id, timestamps, reminder id). `status` is
- * optional here — if omitted, a new audition starts as 'interested'.
- */
 export type NewAuditionInput = Omit<
   Audition,
   'id' | 'createdAt' | 'updatedAt' | 'status' | 'reminderNotificationId'
@@ -34,34 +36,65 @@ export type NewAuditionInput = Omit<
 
 type AuditionContextValue = {
   auditions: Audition[];
-  loading: boolean; // true while the saved data is still being read on startup
+  loading: boolean;
   addAudition: (input: NewAuditionInput) => Audition;
   updateAudition: (id: string, changes: Partial<Audition>) => void;
   deleteAudition: (id: string) => void;
 };
 
-// Created undefined on purpose; useAuditions() below guards against misuse.
 const AuditionContext = createContext<AuditionContextValue | undefined>(undefined);
 
 export function AuditionProvider({ children }: { children: React.ReactNode }) {
+  const { session, loading: authLoading } = useAuth();
+  const userId = session?.user?.id ?? null;
+
   const [auditions, setAuditions] = useState<Audition[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load whatever was saved, once, when the app starts.
+  // Set up notifications once.
   useEffect(() => {
-    let active = true;
     configureNotifications();
-    loadAuditions().then((saved) => {
-      if (!active) return; // ignore if the component unmounted before we finished
-      setAuditions(saved);
-      setLoading(false);
-    });
+  }, []);
+
+  // Load from the right source whenever the signed-in user changes.
+  useEffect(() => {
+    if (authLoading) return; // wait until we know who's signed in
+    let active = true;
+    setLoading(true);
+
+    (async () => {
+      if (userId) {
+        // Migrate any guest auditions into the account — but only clear the local
+        // copy if the cloud save actually succeeded (never lose data on failure).
+        const local = await loadAuditions();
+        if (local.length > 0) {
+          const migrated = await upsertManyCloudAuditions(userId, local);
+          if (migrated) await clearAuditions();
+        }
+        const cloud = await fetchCloudAuditions(userId);
+        if (active) setAuditions(cloud);
+      } else {
+        const local = await loadAuditions();
+        if (active) setAuditions(local);
+      }
+      if (active) setLoading(false);
+    })();
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [authLoading, userId]);
 
-  const addAudition = useCallback((input: NewAuditionInput) => {
+  // Save a single record to the right place (cloud if signed in).
+  function persistOne(record: Audition) {
+    if (userId) upsertCloudAudition(userId, record);
+  }
+  // For guests, the whole list is persisted locally on every change.
+  function persistLocal(next: Audition[]) {
+    if (!userId) saveAuditions(next);
+  }
+
+  function addAudition(input: NewAuditionInput): Audition {
     const now = new Date().toISOString();
     const audition: Audition = {
       ...input,
@@ -70,63 +103,65 @@ export function AuditionProvider({ children }: { children: React.ReactNode }) {
       createdAt: now,
       updatedAt: now,
     };
+
     setAuditions((current) => {
-      const next = [audition, ...current]; // newest first
-      saveAuditions(next);
+      const next = [audition, ...current];
+      persistLocal(next);
       return next;
     });
+    persistOne(audition);
 
-    // Schedule a deadline reminder in the background, then store its id on the
-    // record so we can cancel it later if the audition is deleted.
+    // Schedule a deadline reminder, then store its id.
     scheduleDeadlineReminder(audition).then((notificationId) => {
       if (!notificationId) return;
+      const withReminder = { ...audition, reminderNotificationId: notificationId };
       setAuditions((current) => {
-        const next = current.map((a) =>
-          a.id === audition.id ? { ...a, reminderNotificationId: notificationId } : a
-        );
-        saveAuditions(next);
+        const next = current.map((a) => (a.id === audition.id ? withReminder : a));
+        persistLocal(next);
         return next;
       });
+      persistOne(withReminder);
     });
 
     return audition;
-  }, []);
+  }
 
-  const updateAudition = useCallback((id: string, changes: Partial<Audition>) => {
+  function updateAudition(id: string, changes: Partial<Audition>) {
     setAuditions((current) => {
       const existing = current.find((a) => a.id === id);
       if (!existing) return current;
 
       const updated: Audition = { ...existing, ...changes, updatedAt: new Date().toISOString() };
       const next = current.map((a) => (a.id === id ? updated : a));
-      saveAuditions(next);
+      persistLocal(next);
+      persistOne(updated);
 
-      // Reconcile the deadline reminder: cancel the old one and schedule a fresh
-      // one for the updated record, then store the new id (or clear it).
+      // Reconcile the deadline reminder (cancel old, schedule fresh).
       cancelReminder(existing.reminderNotificationId);
       scheduleDeadlineReminder(updated).then((notificationId) => {
+        const reconciled = { ...updated, reminderNotificationId: notificationId ?? undefined };
         setAuditions((cur) => {
-          const reconciled = cur.map((a) =>
-            a.id === id ? { ...a, reminderNotificationId: notificationId ?? undefined } : a
-          );
-          saveAuditions(reconciled);
-          return reconciled;
+          const n = cur.map((a) => (a.id === id ? reconciled : a));
+          persistLocal(n);
+          return n;
         });
+        persistOne(reconciled);
       });
 
       return next;
     });
-  }, []);
+  }
 
-  const deleteAudition = useCallback((id: string) => {
+  function deleteAudition(id: string) {
     setAuditions((current) => {
       const target = current.find((a) => a.id === id);
-      cancelReminder(target?.reminderNotificationId); // clean up its scheduled reminder
+      cancelReminder(target?.reminderNotificationId);
       const next = current.filter((a) => a.id !== id);
-      saveAuditions(next);
+      persistLocal(next);
       return next;
     });
-  }, []);
+    if (userId) deleteCloudAudition(id);
+  }
 
   return (
     <AuditionContext.Provider
@@ -136,7 +171,6 @@ export function AuditionProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The hook screens use to read and change auditions. */
 export function useAuditions(): AuditionContextValue {
   const context = useContext(AuditionContext);
   if (!context) {
