@@ -16,6 +16,7 @@ import {
 
 import { DateField } from '@/components/date-field';
 import { ThemedText } from '@/components/themed-text';
+import { IMPROVEMENT_AREAS } from '@/constants/improvement-areas';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { AuditionStatus, STATUS_LABELS, STATUS_ORDER } from '@/types/audition';
 
@@ -33,6 +34,7 @@ export type AuditionFormValues = {
   result?: string;
   wentWell?: string;
   wentPoorly?: string;
+  improvementAreas?: string[];
 };
 
 /**
@@ -66,6 +68,13 @@ export function AuditionForm({
   const [result, setResult] = useState(initial?.result ?? '');
   const [wentWell, setWentWell] = useState(initial?.wentWell ?? '');
   const [wentPoorly, setWentPoorly] = useState(initial?.wentPoorly ?? '');
+  const [improvementAreas, setImprovementAreas] = useState<string[]>(initial?.improvementAreas ?? []);
+
+  function toggleArea(area: string) {
+    setImprovementAreas((current) =>
+      current.includes(area) ? current.filter((a) => a !== area) : [...current, area]
+    );
+  }
 
   const border = useThemeColor({}, 'border');
   const primary = useThemeColor({}, 'primary');
@@ -132,6 +141,8 @@ export function AuditionForm({
       result: status === 'attended' ? orUndefined(result) : undefined,
       wentWell: status === 'attended' ? orUndefined(wentWell) : undefined,
       wentPoorly: status === 'attended' ? orUndefined(wentPoorly) : undefined,
+      improvementAreas:
+        status === 'attended' && improvementAreas.length ? improvementAreas : undefined,
     });
 
     // Clear the form after saving. On the Add screen this empties it for the next
@@ -148,6 +159,7 @@ export function AuditionForm({
     setResult('');
     setWentWell('');
     setWentPoorly('');
+    setImprovementAreas([]);
   }
 
   return (
@@ -227,6 +239,30 @@ export function AuditionForm({
               placeholder="What you were happy with — playing, prep, mindset…" multiline />
             <Field label="What didn't go well / feedback" value={wentPoorly} onChangeText={setWentPoorly}
               placeholder="Nerves, mistakes, panel feedback, things to fix…" multiline />
+
+            <View style={styles.field}>
+              <ThemedText style={styles.label}>Areas to work on</ThemedText>
+              <ThemedText style={[styles.hint, { color: muted }]}>
+                Tag any that apply — these build your &quot;patterns to work on&quot; over time.
+              </ThemedText>
+              <View style={styles.chips}>
+                {IMPROVEMENT_AREAS.map((area) => {
+                  const selected = improvementAreas.includes(area);
+                  return (
+                    <Pressable
+                      key={area}
+                      onPress={() => toggleArea(area)}
+                      style={[
+                        styles.chip,
+                        { borderColor: border },
+                        selected && { backgroundColor: primary, borderColor: primary },
+                      ]}>
+                      <ThemedText style={styles.chipText}>{area}</ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
           </>
         )}
 
@@ -287,6 +323,7 @@ const styles = StyleSheet.create({
   intro: { opacity: 0.7, marginBottom: 8 },
   field: { gap: 6, marginTop: 8 },
   label: { fontWeight: '600' },
+  hint: { fontSize: 13 },
   input: {
     borderWidth: 1,
     borderRadius: 12,

@@ -19,6 +19,7 @@ type Row = {
   result: string | null;
   went_well: string | null;
   went_poorly: string | null;
+  improvement_areas: string[] | null;
   improvement_report: string | null;
   application_deadline: string | null;
   audition_date: string | null;
@@ -43,6 +44,7 @@ function toRow(userId: string, a: Audition): Row {
     result: a.result ?? null,
     went_well: a.wentWell ?? null,
     went_poorly: a.wentPoorly ?? null,
+    improvement_areas: a.improvementAreas && a.improvementAreas.length ? a.improvementAreas : null,
     improvement_report: a.improvementReport ?? null,
     application_deadline: a.applicationDeadline ?? null,
     audition_date: a.auditionDate ?? null,
@@ -67,6 +69,7 @@ function fromRow(r: Row): Audition {
     result: r.result ?? undefined,
     wentWell: r.went_well ?? undefined,
     wentPoorly: r.went_poorly ?? undefined,
+    improvementAreas: r.improvement_areas ?? undefined,
     improvementReport: r.improvement_report ?? undefined,
     applicationDeadline: r.application_deadline ?? undefined,
     auditionDate: r.audition_date ?? undefined,
