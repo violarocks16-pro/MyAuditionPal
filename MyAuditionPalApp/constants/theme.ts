@@ -1,59 +1,59 @@
 /**
- * MyAuditionPal color palette — a calm, soothing scheme of pinks, beiges, and warm whites.
- * Auditioning is stressful; the app should feel like a reassuring companion.
+ * MyAuditionPal color palette — a clean, high-contrast scheme with bright-pink accents.
+ *   Light: light-gray backdrop, white cards, black text, pink accents.
+ *   Dark:  black backdrop, gray cards, white text, pink accents.
  *
  * This `Colors` object is the single source of truth for color. The themed components
- * (ThemedView, ThemedText) and the tab bar read from it, so changing a value here
- * recolors the whole app. Each key exists in BOTH `light` and `dark` so screens can
- * read the right one for the user's system setting.
+ * (ThemedView, ThemedText), the tab bar, and every screen read from it, so changing a
+ * value here recolors the whole app. Each key exists in BOTH `light` and `dark`.
  *
  * Key meanings:
- * - text             : main text color (soft charcoal-brown, never harsh black)
- * - background       : the base screen color (warm off-white)
- * - surface          : cards / raised areas (pale beige)
- * - tint             : the active accent (used for the selected tab & primary actions)
- * - primary          : muted dusty pink — main accent / buttons
- * - secondary        : deeper dusty pink — highlights / pressed states
- * - deadline         : gentle dusty terracotta for time-sensitive warnings (never alarming red)
- * - border           : soft hairline color for dividers / card edges
- * - muted            : low-emphasis text (captions, hints)
- * - icon / tabIcon*  : icon colors, kept consistent with the palette
+ * - text             : main text color (black in light, white in dark)
+ * - background       : the base screen color (gray in light, black in dark)
+ * - surface          : cards / raised areas (white in light, gray in dark)
+ * - tint             : the active accent (selected tab & primary actions) — bright pink
+ * - primary          : bright pink — main accent / buttons / badges
+ * - secondary        : pink — highlights / pressed states / heart
+ * - deadline         : warm alert color for time-sensitive warnings
+ * - border           : hairline color for dividers / card edges
+ * - muted            : low-emphasis text (captions, hints, section headers)
+ * - icon / tabIcon*  : icon colors
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#C98A8A'; // deeper dusty pink
-const tintColorDark = '#E8B4B8'; // dusty pink, reads well on dark
+const tintColorLight = '#EC4899'; // bright pink
+const tintColorDark = '#EC4899';
 
 export const Colors = {
   light: {
-    text: '#4A3F3A',
-    background: '#FDFBF7',
-    surface: '#F3E9DD',
+    text: '#111111',
+    background: '#F4F4F6',
+    surface: '#FFFFFF',
     tint: tintColorLight,
-    primary: '#E8B4B8',
-    secondary: '#C98A8A',
-    deadline: '#C97B63',
-    success: '#6BA583',
-    border: '#EADFD3',
-    muted: '#8A7D76',
-    icon: '#9C8E86',
-    tabIconDefault: '#C9BBB1',
+    primary: '#EC4899',
+    secondary: '#DB2777',
+    deadline: '#E0584A',
+    success: '#2FA36B',
+    border: '#E2E2E6',
+    muted: '#6E6E73',
+    icon: '#6E6E73',
+    tabIconDefault: '#9A9A9E',
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#F3E9DD',
-    background: '#1E1A19',
-    surface: '#2A2422',
+    text: '#FFFFFF',
+    background: '#000000',
+    surface: '#2C2C2E',
     tint: tintColorDark,
-    primary: '#E8B4B8',
-    secondary: '#D9A5A0',
-    deadline: '#D88E73',
-    success: '#83BE9C',
-    border: '#3A322E',
-    muted: '#B9A89E',
-    icon: '#B9A89E',
-    tabIconDefault: '#7A6D65',
+    primary: '#EC4899',
+    secondary: '#F472B6',
+    deadline: '#F08A7A',
+    success: '#4FC58C',
+    border: '#3A3A3C',
+    muted: '#AEAEB2',
+    icon: '#AEAEB2',
+    tabIconDefault: '#7A7A7E',
     tabIconSelected: tintColorDark,
   },
 };

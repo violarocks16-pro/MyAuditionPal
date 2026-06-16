@@ -39,7 +39,7 @@ Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the
 
 ### Phase 1 — Tracking ✅
 - **Data model** `types/audition.ts`: status lifecycle **Interested → Applied → Attended** (simplified from the original 5-stage idea). `result` is free text (e.g. "semi-finals"), shown when Attended. `isActive()` = not yet attended. Fields incl. `repertoirePhotoUri`, `reminderNotificationId`, `attendNudgeDismissed`, `sourceListingId`.
-- **Five tabs** (`app/(tabs)/`): 🎯 My Auditions (`index.tsx`), 🔎 Browse (`browse.tsx`), ➕ Add (`add.tsx`), 📜 History (`history.tsx`), 👤 Profile (`profile.tsx`).
+- **Four tabs** (`app/(tabs)/`): 🎯 My Auditions (`index.tsx`), 🔎 Browse (`browse.tsx`), 📜 History (`history.tsx`), 👤 Profile (`profile.tsx`). **Add is no longer a tab** — it's a modal (`app/add.tsx`) opened by the pink **+** in the Browse header (and the My Auditions empty-state button); it has a Close button and dismisses on save.
 - **Add/Edit** share `components/audition-form.tsx`. Tap a card → edit screen `app/audition/[id].tsx` (change status, edit fields, delete). Form clears after saving.
 - **My Auditions**: grouped **Interested / Applied** sections, soonest-deadline first. Cards (`components/audition-card.tsx`) show separate "Application deadline" + "Audition date" lines (deadline highlighted within 7 days, not when past); **status badge is a dropdown popover** (also on History); **"Did you attend?"** nudge on past-date cards → "How did it go?" result box → moves to History. Long-press to delete.
 - **History**: attended auditions, newest first; reuses the card.
@@ -59,6 +59,13 @@ Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the
 - ✅ **Email confirmation is ON.** Site URL set to the GitHub repo as a valid redirect (Authentication → URL Configuration), so the confirm link lands on a real page instead of erroring. Confirm → return to app → sign in works. The app handles the confirm flow. (For real launch: a custom SMTP + a proper "confirmed" landing page — see next ideas.)
 
 ---
+
+## UI / design overhaul (2026-06-15)
+
+- **New theme** in `constants/theme.ts` (drives the whole app, light + dark): light = light-gray backdrop, white cards, black text; dark = black backdrop, gray cards, white text; **bright-pink (`#EC4899`)** accents (buttons, active tab, badges, links). Replaced the original warm beige/dusty-pink palette.
+- **Cards** (`audition-card.tsx`, `listing-card.tsx`): soft floating shadow, bold title, **MaterialCommunityIcons outline icons** for meta (map-marker, checkbox-marked, music-note, trophy) that follow the text color. Status badge color-coded — Interested = pink outline (matches the View Details button), Applied = solid pink, Attended = green.
+- **Browse** (`browse.tsx`): pinned white/gray **header band** "Upcoming {instrument} Auditions" with the **+** button; a **search bar** below it (live filter on ensemble/position/location); listing cards with a **heart toggle** (add ♡ / remove ♥ w/ confirm) and a **bright-pink outline "View Details"** button; full light/dark support (Browse hardcodes its own white/gray/black values to match the theme).
+- My Auditions cards have a centered **"View Details"** button (opens the edit screen).
 
 ## Decisions on record
 - **SDK 54 pin** (Expo Go compatibility). — see memory `expo-go-sdk-pin`.

@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 
@@ -67,13 +68,14 @@ export function AuditionCard({
     setResultText('');
   }
 
-  // Status badge colors: Interested = soft outline, Applied = pink, Attended = green.
+  // Status badge colors: Interested = pink outline (like the View Details button),
+  // Applied = solid pink, Attended = solid green.
   const badge =
     audition.status === 'applied'
       ? { bg: primary, fg: text, bd: primary }
       : audition.status === 'attended'
         ? { bg: success, fg: '#fff', bd: success }
-        : { bg: 'transparent', fg: muted, bd: border };
+        : { bg: surface, fg: primary, bd: primary };
 
   // Application deadline line, highlighted only when coming up (today–7 days).
   let deadlineLine: string | null = null;
@@ -81,14 +83,14 @@ export function AuditionCard({
   if (audition.applicationDeadline) {
     const days = daysUntil(audition.applicationDeadline);
     const relative = relativeLabel(days);
-    deadlineLine = `⏳ Deadline ${formatIsoDate(audition.applicationDeadline)}${
+    deadlineLine = `Deadline ${formatIsoDate(audition.applicationDeadline)}${
       relative ? ` · ${relative}` : ''
     }`;
     deadlineUrgent = days !== null && days >= 0 && days <= 7;
   }
 
   const auditionDateLine = audition.auditionDate
-    ? `🎭 Audition ${formatIsoDate(audition.auditionDate)}`
+    ? `Audition ${formatIsoDate(audition.auditionDate)}`
     : null;
 
   // Show a "Did you attend?" nudge once the audition date has passed.
@@ -134,20 +136,34 @@ export function AuditionCard({
 
       <View style={styles.meta}>
         {audition.location ? (
-          <ThemedText style={[styles.metaLine, { color: muted }]}>📍 {audition.location}</ThemedText>
+          <MetaRow icon="map-marker-outline" text={audition.location} color={muted} />
         ) : null}
         {deadlineLine ? (
-          <ThemedText style={[styles.metaLine, { color: deadlineUrgent ? deadlineColor : muted }]}>
-            {deadlineLine}
-          </ThemedText>
+          <MetaRow
+            icon="checkbox-marked-outline"
+            text={deadlineLine}
+            color={deadlineUrgent ? deadlineColor : muted}
+          />
         ) : null}
         {auditionDateLine ? (
-          <ThemedText style={[styles.metaLine, { color: muted }]}>{auditionDateLine}</ThemedText>
+          <MetaRow icon="music-note-outline" text={auditionDateLine} color={muted} />
         ) : null}
         {audition.result ? (
-          <ThemedText style={[styles.metaLine, { color: muted }]}>🏆 {audition.result}</ThemedText>
+          <MetaRow icon="trophy-outline" text={audition.result} color={muted} />
         ) : null}
       </View>
+
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          style={({ pressed }) => [
+            styles.detailsButton,
+            { backgroundColor: surface, borderColor: primary },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText style={[styles.detailsText, { color: primary }]}>View Details</ThemedText>
+        </Pressable>
+      ) : null}
 
       {showNudge ? (
         <View style={[styles.nudge, { borderColor: border }]}>
@@ -239,6 +255,24 @@ export function AuditionCard({
   );
 }
 
+/** One meta line with a leading outline icon (matches the Browse cards). */
+function MetaRow({
+  icon,
+  text,
+  color,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  text: string;
+  color: string;
+}) {
+  return (
+    <View style={styles.metaRow}>
+      <MaterialCommunityIcons name={icon} size={15} color={color} />
+      <ThemedText style={[styles.metaLine, { color }]}>{text}</ThemedText>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -261,11 +295,20 @@ const styles = StyleSheet.create({
   },
   ensemble: { flex: 1, fontSize: 18, fontWeight: '700', lineHeight: 23 },
   position: { fontSize: 15, marginTop: -2 },
-  meta: { gap: 3, marginTop: 4 },
-  metaLine: { fontSize: 14, lineHeight: 19 },
+  meta: { gap: 4, marginTop: 4 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaLine: { fontSize: 14, lineHeight: 19, flexShrink: 1 },
+  detailsButton: {
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  detailsText: { fontSize: 14, fontWeight: '700' },
   badge: {
     borderRadius: 999,
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingHorizontal: 11,
     paddingVertical: 5,
   },
