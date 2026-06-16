@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: background }]} edges={['top']}>
       <View style={styles.content}>
-        <ScreenHeader title="👤 Profile" />
+        <ScreenHeader title="Profile" />
 
         {/* Account */}
         <ThemedText style={styles.sectionLabel}>Account</ThemedText>

@@ -55,11 +55,9 @@ export default function MyAuditionsScreen() {
     return (
       <SafeAreaView style={[styles.safe, styles.center, { backgroundColor: background }]}>
         <ThemedText type="title" style={styles.emptyTitle}>
-          🎯 No auditions yet
+          No Auditions Yet
         </ThemedText>
-        <ThemedText style={styles.emptyText}>
-          Add one you&apos;re preparing for, or one you&apos;ve already taken.
-        </ThemedText>
+        <ThemedText style={styles.emptyText}>Document the work. Trust the process.</ThemedText>
         <Pressable
           onPress={() => router.navigate('/add')}
           style={({ pressed }) => [
@@ -80,7 +78,22 @@ export default function MyAuditionsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
-        ListHeaderComponent={<ScreenHeader title="🎯 My Auditions" />}
+        ListHeaderComponent={
+          <ScreenHeader
+            title="My Auditions"
+            right={
+              <Pressable
+                onPress={() => router.navigate('/browse')}
+                style={({ pressed }) => [
+                  styles.browseButton,
+                  { backgroundColor: primary },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText style={styles.browseButtonText}>Browse</ThemedText>
+              </Pressable>
+            }
+          />
+        }
         renderSectionHeader={({ section }) => (
           <ThemedText style={[styles.sectionHeader, { color: muted }]}>
             {section.title.toUpperCase()} · {section.data.length}
@@ -117,4 +130,6 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.8 },
   buttonText: { fontSize: 16, fontWeight: '700' },
+  browseButton: { borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
+  browseButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

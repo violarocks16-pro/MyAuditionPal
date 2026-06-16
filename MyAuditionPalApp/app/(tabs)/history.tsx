@@ -54,7 +54,7 @@ export default function HistoryScreen() {
       ) : completed.length === 0 ? (
         <View style={styles.center}>
           <ThemedText type="title" style={styles.emptyTitle}>
-            📜 No history yet
+            No history yet
           </ThemedText>
           <ThemedText style={styles.emptyText}>
             Auditions you mark as &quot;Attended&quot; will appear here, with their results.
@@ -67,7 +67,7 @@ export default function HistoryScreen() {
           contentContainerStyle={styles.list}
           ListHeaderComponent={
             <View style={styles.headerWrap}>
-              <ScreenHeader title="📜 History" />
+              <ScreenHeader title="History" />
               {patterns.length > 0 ? (
                 <View style={[styles.patterns, { backgroundColor: surface, borderColor: border }]}>
                   <ThemedText style={styles.patternsTitle}>Patterns to work on</ThemedText>
