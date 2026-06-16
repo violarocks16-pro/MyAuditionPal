@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -27,6 +28,7 @@ export function AuditionCard({
   onChangeStatus,
   onMarkAttended,
   onDismissNudge,
+  index = 0,
 }: {
   audition: Audition;
   onPress?: () => void;
@@ -34,6 +36,7 @@ export function AuditionCard({
   onChangeStatus?: (status: AuditionStatus) => void;
   onMarkAttended?: (result?: string) => void;
   onDismissNudge?: () => void;
+  index?: number; // position in the list, for a staggered entrance
 }) {
   const surface = useThemeColor({}, 'surface');
   const border = useThemeColor({}, 'border');
@@ -104,6 +107,7 @@ export function AuditionCard({
     !audition.attendNudgeDismissed;
 
   return (
+    <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 60).duration(420)}>
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
@@ -252,6 +256,7 @@ export function AuditionCard({
         </Modal>
       ) : null}
     </Pressable>
+    </Animated.View>
   );
 }
 

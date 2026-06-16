@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -13,11 +14,13 @@ export function ListingCard({
   added,
   onAdd,
   onRemove,
+  index = 0,
 }: {
   listing: Listing;
   added: boolean;
   onAdd: () => void;
   onRemove: () => void;
+  index?: number; // position in the list, for a staggered entrance
 }) {
   const dark = (useColorScheme() ?? 'light') === 'dark';
   const secondary = useThemeColor({}, 'secondary');
@@ -33,7 +36,9 @@ export function ListingCard({
   const facts = [listing.location, listing.pay].filter(Boolean).join('  ·  ');
 
   return (
-    <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+    <Animated.View
+      entering={FadeInDown.delay(Math.min(index, 10) * 60).duration(420)}
+      style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
           <ThemedText style={[styles.ensemble, { color: brightPink }]}>{listing.ensemble}</ThemedText>
@@ -77,7 +82,7 @@ export function ListingCard({
           </Pressable>
         ) : null}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

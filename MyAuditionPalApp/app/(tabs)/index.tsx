@@ -99,9 +99,10 @@ export default function MyAuditionsScreen() {
             {section.title.toUpperCase()} · {section.data.length}
           </ThemedText>
         )}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <AuditionCard
             audition={item}
+            index={index}
             onPress={() => router.push(`/audition/${item.id}`)}
             onLongPress={() => confirmDelete(item.id, item.ensemble)}
             onChangeStatus={(status) => updateAudition(item.id, { status })}

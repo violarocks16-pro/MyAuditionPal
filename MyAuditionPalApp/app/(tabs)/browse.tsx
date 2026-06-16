@@ -164,9 +164,10 @@ export default function BrowseScreen() {
               </ThemedText>
             )
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <ListingCard
               listing={item}
+              index={index}
               added={addedIds.has(item.id)}
               onAdd={() => addListing(item)}
               onRemove={() => removeListing(item)}

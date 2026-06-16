@@ -88,9 +88,10 @@ export default function HistoryScreen() {
               ) : null}
             </View>
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <AuditionCard
               audition={item}
+              index={index}
               onPress={() => router.push(`/audition/${item.id}`)}
               onLongPress={() => confirmDelete(item.id, item.ensemble)}
               onChangeStatus={(status) => updateAudition(item.id, { status })}
