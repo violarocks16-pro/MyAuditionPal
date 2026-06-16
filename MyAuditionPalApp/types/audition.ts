@@ -25,6 +25,9 @@ export interface Audition {
   location?: string; // city / venue
   status: AuditionStatus; // where it is in the lifecycle
   result?: string; // free text outcome once attended, e.g. "semi-finals"
+  wentWell?: string; // post-audition reflection: what went well
+  wentPoorly?: string; // post-audition reflection: what didn't go well / feedback
+  improvementReport?: string; // AI-generated summary of what to work on
   applicationDeadline?: string; // ISO date — when applications are due
   auditionDate?: string; // ISO date — when the audition happens
   repertoire?: string; // typed list of pieces

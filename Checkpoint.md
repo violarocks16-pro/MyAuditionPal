@@ -72,8 +72,12 @@ Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the
 - **Manual curation** of listings, link back, no scraping. — memory `audition-listing-sources`.
 - **Social login (Google/Apple) deferred to the dev-build phase** (Apple also needs a paid Apple Developer account). — memory `social-login-deferred`.
 
+## Post-audition reflection (2026-06-15)
+When status = **Attended**, the form shows **Result**, **What went well**, and **What didn't go well / feedback** (`wentWell`, `wentPoorly` on the model + cloud columns `went_well`, `went_poorly`; also added `improvement_report` column for the future AI report). Run once in Supabase if not done: `alter table auditions add column if not exists went_well text, add column if not exists went_poorly text, add column if not exists improvement_report text;`
+
 ## Known limitations / NEXT IDEAS
-1. **For real launch:** connect a custom SMTP (free-tier email is rate-limited) and a proper "you're confirmed — return to the app" landing page (or deep link, once there's a dev build). Email confirmation itself is already on and working.
+1. **AI "improvement report"** (deferred) — summarize wentWell/wentPoorly into a coaching report. Needs an LLM via a backend (Supabase Edge Function holds the key). Paid option: Claude (Haiku, pennies). Free options to consider: Google Gemini free tier, Groq free tier, Cloudflare Workers AI — or a NO-LLM approach (structured reflection categories + cross-audition keyword/theme aggregation). The `improvement_report` column already exists.
+2. **For real launch:** connect a custom SMTP (free-tier email is rate-limited) and a proper "you're confirmed — return to the app" landing page (or deep link, once there's a dev build). Email confirmation itself is already on and working.
 2. **Development build** — unlocks: native **Google + Apple sign-in**, rock-solid notifications, App Store distribution. Apple needs the $99/yr Apple Developer account. (User has deferred this; revisit when heading to release.)
 3. **Repertoire photo sync** across devices — currently a local file URI; would need Supabase Storage upload.
 4. **Offline resilience** for signed-in writes (currently a failed cloud write just logs a warning).

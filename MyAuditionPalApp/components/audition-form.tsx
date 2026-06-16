@@ -31,6 +31,8 @@ export type AuditionFormValues = {
   notes?: string;
   status: AuditionStatus;
   result?: string;
+  wentWell?: string;
+  wentPoorly?: string;
 };
 
 /**
@@ -62,6 +64,8 @@ export function AuditionForm({
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [status, setStatus] = useState<AuditionStatus>(initial?.status ?? 'interested');
   const [result, setResult] = useState(initial?.result ?? '');
+  const [wentWell, setWentWell] = useState(initial?.wentWell ?? '');
+  const [wentPoorly, setWentPoorly] = useState(initial?.wentPoorly ?? '');
 
   const border = useThemeColor({}, 'border');
   const primary = useThemeColor({}, 'primary');
@@ -126,6 +130,8 @@ export function AuditionForm({
       notes: orUndefined(notes),
       status,
       result: status === 'attended' ? orUndefined(result) : undefined,
+      wentWell: status === 'attended' ? orUndefined(wentWell) : undefined,
+      wentPoorly: status === 'attended' ? orUndefined(wentPoorly) : undefined,
     });
 
     // Clear the form after saving. On the Add screen this empties it for the next
@@ -140,6 +146,8 @@ export function AuditionForm({
     setNotes('');
     setStatus('interested');
     setResult('');
+    setWentWell('');
+    setWentPoorly('');
   }
 
   return (
@@ -212,8 +220,14 @@ export function AuditionForm({
         </View>
 
         {status === 'attended' && (
-          <Field label="Result (optional)" value={result} onChangeText={setResult}
-            placeholder="e.g. semi-finals" />
+          <>
+            <Field label="Result (optional)" value={result} onChangeText={setResult}
+              placeholder="e.g. semi-finals" />
+            <Field label="What went well" value={wentWell} onChangeText={setWentWell}
+              placeholder="What you were happy with — playing, prep, mindset…" multiline />
+            <Field label="What didn't go well / feedback" value={wentPoorly} onChangeText={setWentPoorly}
+              placeholder="Nerves, mistakes, panel feedback, things to fix…" multiline />
+          </>
         )}
 
         <Pressable

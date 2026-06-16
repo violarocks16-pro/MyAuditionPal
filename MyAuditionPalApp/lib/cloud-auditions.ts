@@ -17,6 +17,9 @@ type Row = {
   location: string | null;
   status: string;
   result: string | null;
+  went_well: string | null;
+  went_poorly: string | null;
+  improvement_report: string | null;
   application_deadline: string | null;
   audition_date: string | null;
   repertoire: string | null;
@@ -38,6 +41,9 @@ function toRow(userId: string, a: Audition): Row {
     location: a.location ?? null,
     status: a.status,
     result: a.result ?? null,
+    went_well: a.wentWell ?? null,
+    went_poorly: a.wentPoorly ?? null,
+    improvement_report: a.improvementReport ?? null,
     application_deadline: a.applicationDeadline ?? null,
     audition_date: a.auditionDate ?? null,
     repertoire: a.repertoire ?? null,
@@ -59,6 +65,9 @@ function fromRow(r: Row): Audition {
     location: r.location ?? undefined,
     status: r.status as AuditionStatus,
     result: r.result ?? undefined,
+    wentWell: r.went_well ?? undefined,
+    wentPoorly: r.went_poorly ?? undefined,
+    improvementReport: r.improvement_report ?? undefined,
     applicationDeadline: r.application_deadline ?? undefined,
     auditionDate: r.audition_date ?? undefined,
     repertoire: r.repertoire ?? undefined,
