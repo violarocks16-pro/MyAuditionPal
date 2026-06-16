@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, FlatList, StyleSheet, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuditionCard } from '@/components/audition-card';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { useAuditions } from '@/contexts/audition-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -65,10 +66,8 @@ export default function HistoryScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={
-            <View>
-              <ThemedText type="title" style={styles.heading}>
-                📜 History
-              </ThemedText>
+            <View style={styles.headerWrap}>
+              <ScreenHeader title="📜 History" />
               {patterns.length > 0 ? (
                 <View style={[styles.patterns, { backgroundColor: surface, borderColor: border }]}>
                   <ThemedText style={styles.patternsTitle}>Patterns to work on</ThemedText>
@@ -109,7 +108,7 @@ const styles = StyleSheet.create({
   emptyTitle: { textAlign: 'center' },
   emptyText: { textAlign: 'center', opacity: 0.7 },
   list: { padding: 20, gap: 14 },
-  heading: { marginBottom: 8 },
+  headerWrap: { gap: 14 },
   patterns: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 14,

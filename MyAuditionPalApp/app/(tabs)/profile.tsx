@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { InstrumentDropdown } from '@/components/instrument-dropdown';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { useAuth } from '@/contexts/auth-context';
 import { useProfile } from '@/contexts/profile-context';
@@ -31,7 +32,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: background }]} edges={['top']}>
       <View style={styles.content}>
-        <ThemedText type="title">👤 Profile</ThemedText>
+        <ScreenHeader title="👤 Profile" />
 
         {/* Account */}
         <ThemedText style={styles.sectionLabel}>Account</ThemedText>

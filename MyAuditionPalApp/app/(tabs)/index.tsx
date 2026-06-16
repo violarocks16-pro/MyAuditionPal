@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuditionCard } from '@/components/audition-card';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { useAuditions } from '@/contexts/audition-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -79,11 +80,7 @@ export default function MyAuditionsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
-        ListHeaderComponent={
-          <ThemedText type="title" style={styles.heading}>
-            🎯 My Auditions
-          </ThemedText>
-        }
+        ListHeaderComponent={<ScreenHeader title="🎯 My Auditions" />}
         renderSectionHeader={({ section }) => (
           <ThemedText style={[styles.sectionHeader, { color: muted }]}>
             {section.title.toUpperCase()} · {section.data.length}
