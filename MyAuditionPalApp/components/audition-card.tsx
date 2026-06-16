@@ -121,8 +121,8 @@ export function AuditionCard({
     if (!scrollY) return {};
     const d = scrollY.value - index * ROW_ESTIMATE;
     return {
-      opacity: interpolate(d, [0, 110], [1, 0.2], Extrapolation.CLAMP),
-      transform: [{ scale: interpolate(d, [0, 110], [1, 0.92], Extrapolation.CLAMP) }],
+      opacity: interpolate(d, [0, 130], [1, 0.6], Extrapolation.CLAMP),
+      transform: [{ scale: interpolate(d, [0, 130], [1, 0.97], Extrapolation.CLAMP) }],
     };
   });
 
