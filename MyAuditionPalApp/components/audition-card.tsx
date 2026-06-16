@@ -1,12 +1,21 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  FadeInDown,
+  interpolate,
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { daysUntil, formatIsoDate } from '@/lib/date';
 import { Audition, AuditionStatus, STATUS_LABELS, STATUS_ORDER } from '@/types/audition';
+
+// Approximate audition-card height (incl. gap), used for the scroll-fade math.
+const ROW_ESTIMATE = 190;
 
 /** A short human hint like "today", "tomorrow", "in 3 days", "overdue". */
 function relativeLabel(days: number | null): string {
@@ -29,6 +38,7 @@ export function AuditionCard({
   onMarkAttended,
   onDismissNudge,
   index = 0,
+  scrollY,
 }: {
   audition: Audition;
   onPress?: () => void;
@@ -37,6 +47,7 @@ export function AuditionCard({
   onMarkAttended?: (result?: string) => void;
   onDismissNudge?: () => void;
   index?: number; // position in the list, for a staggered entrance
+  scrollY?: SharedValue<number>; // list scroll offset, for the scroll-fade effect
 }) {
   const surface = useThemeColor({}, 'surface');
   const border = useThemeColor({}, 'border');
@@ -106,7 +117,17 @@ export function AuditionCard({
     auditionPassed &&
     !audition.attendNudgeDismissed;
 
+  const scrollStyle = useAnimatedStyle(() => {
+    if (!scrollY) return {};
+    const d = scrollY.value - index * ROW_ESTIMATE;
+    return {
+      opacity: interpolate(d, [0, 110], [1, 0.2], Extrapolation.CLAMP),
+      transform: [{ scale: interpolate(d, [0, 110], [1, 0.92], Extrapolation.CLAMP) }],
+    };
+  });
+
   return (
+    <Animated.View style={scrollStyle}>
     <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 60).duration(420)}>
     <Pressable
       onPress={onPress}
@@ -256,6 +277,7 @@ export function AuditionCard({
         </Modal>
       ) : null}
     </Pressable>
+    </Animated.View>
     </Animated.View>
   );
 }

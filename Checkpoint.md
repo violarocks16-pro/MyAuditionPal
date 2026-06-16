@@ -66,7 +66,8 @@ Homebrew, Node 26, VS Code installed. Expo project created (SDK 54), runs on the
 - **Cards** (`audition-card.tsx`, `listing-card.tsx`): soft floating shadow, bold title, **MaterialCommunityIcons outline icons** for meta (map-marker, checkbox-marked, music-note, trophy) that follow the text color. Status badge color-coded — Interested = pink outline (matches the View Details button), Applied = solid pink, Attended = green.
 - **Browse** (`browse.tsx`): pinned white/gray **header band** "Upcoming {instrument} Auditions" with the **+** button; a **search bar** below it (live filter on ensemble/position/location); listing cards with a **heart toggle** (add ♡ / remove ♥ w/ confirm) and a **bright-pink outline "View Details"** button; full light/dark support (Browse hardcodes its own white/gray/black values to match the theme).
 - My Auditions cards have a centered **"View Details"** button (opens the edit screen).
-- **Unified header band** (`components/screen-header.tsx`) — a rounded surface card with the screen title, used at the top of My Auditions, Browse, History, and Profile so all tabs match.
+- **Unified header band** (`components/screen-header.tsx`) — a rounded surface card with the screen title, at the top of all tabs. Headers are **pinned** (outside the list) on Browse, My Auditions, and History so they stay put while scrolling.
+- **Card animations** (react-native-reanimated): staggered `FadeInDown` entrance + a **scroll-fade** (cards shrink/fade as they scroll off the top) on Browse, My Auditions, and History. Scroll-fade uses an estimated row height; exact on Browse/History, approximate on My Auditions (its section headers scroll). `scrollY` shared value passed into the cards.
 
 ## Decisions on record
 - **SDK 54 pin** (Expo Go compatibility). — see memory `expo-go-sdk-pin`.

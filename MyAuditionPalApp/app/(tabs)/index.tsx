@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuditionCard } from '@/components/audition-card';
@@ -9,6 +10,10 @@ import { useAuditions } from '@/contexts/audition-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { daysUntil } from '@/lib/date';
 import { Audition, isActive } from '@/types/audition';
+
+// createAnimatedComponent drops SectionList's generics; `any` lets us keep our
+// own typed render callbacks below.
+const AnimatedSectionList: any = Animated.createAnimatedComponent(SectionList);
 
 // The soonest relevant date (deadline first, else audition date) in "days from now".
 // Used to sort within a section; items with no date sort last.
@@ -27,6 +32,11 @@ export default function MyAuditionsScreen() {
   const text = useThemeColor({}, 'text');
   const muted = useThemeColor({}, 'muted');
 
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
   // My Auditions = everything still in progress (not yet attended), grouped by status.
   const active = auditions.filter(isActive);
   const bySoonest = (a: Audition, b: Audition) => soonest(a) - soonest(b);
@@ -43,6 +53,18 @@ export default function MyAuditionsScreen() {
     ]);
   }
 
+  const browseButton = (
+    <Pressable
+      onPress={() => router.navigate('/browse')}
+      style={({ pressed }) => [
+        styles.browseButton,
+        { backgroundColor: primary },
+        pressed && styles.pressed,
+      ]}>
+      <ThemedText style={styles.browseButtonText}>Browse</ThemedText>
+    </Pressable>
+  );
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.safe, styles.center, { backgroundColor: background }]}>
@@ -53,63 +75,71 @@ export default function MyAuditionsScreen() {
 
   if (active.length === 0) {
     return (
-      <SafeAreaView style={[styles.safe, styles.center, { backgroundColor: background }]}>
-        <ThemedText type="title" style={styles.emptyTitle}>
-          No Auditions Yet
-        </ThemedText>
-        <ThemedText style={styles.emptyText}>Document the work. Trust the process.</ThemedText>
-        <Pressable
-          onPress={() => router.navigate('/add')}
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: primary },
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText style={[styles.buttonText, { color: text }]}>Add an audition</ThemedText>
-        </Pressable>
+      <SafeAreaView style={[styles.safe, { backgroundColor: background }]} edges={['top']}>
+        <View style={styles.topSection}>
+          <ScreenHeader title="My Auditions" right={browseButton} />
+        </View>
+        <View style={styles.center}>
+          <ThemedText type="title" style={styles.emptyTitle}>
+            No Auditions Yet
+          </ThemedText>
+          <ThemedText style={styles.emptyText}>Document the work. Trust the process.</ThemedText>
+          <Pressable
+            onPress={() => router.navigate('/add')}
+            style={({ pressed }) => [
+              styles.button,
+              { backgroundColor: primary },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText style={[styles.buttonText, { color: text }]}>Add an audition</ThemedText>
+          </Pressable>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: background }]} edges={['top']}>
-      <SectionList
+      <View style={styles.topSection}>
+        <ScreenHeader title="My Auditions" right={browseButton} />
+      </View>
+      <AnimatedSectionList
         sections={sections}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Audition) => item.id}
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
-        ListHeaderComponent={
-          <ScreenHeader
-            title="My Auditions"
-            right={
-              <Pressable
-                onPress={() => router.navigate('/browse')}
-                style={({ pressed }) => [
-                  styles.browseButton,
-                  { backgroundColor: primary },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText style={styles.browseButtonText}>Browse</ThemedText>
-              </Pressable>
-            }
-          />
-        }
-        renderSectionHeader={({ section }) => (
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        renderSectionHeader={({ section }: { section: { title: string; data: Audition[] } }) => (
           <ThemedText style={[styles.sectionHeader, { color: muted }]}>
             {section.title.toUpperCase()} · {section.data.length}
           </ThemedText>
         )}
-        renderItem={({ item, index }) => (
-          <AuditionCard
-            audition={item}
-            index={index}
-            onPress={() => router.push(`/audition/${item.id}`)}
-            onLongPress={() => confirmDelete(item.id, item.ensemble)}
-            onChangeStatus={(status) => updateAudition(item.id, { status })}
-            onMarkAttended={() => updateAudition(item.id, { status: 'attended' })}
-            onDismissNudge={() => updateAudition(item.id, { attendNudgeDismissed: true })}
-          />
-        )}
+        renderItem={({
+          item,
+          section,
+          index,
+        }: {
+          item: Audition;
+          section: { title: string; data: Audition[] };
+          index: number;
+        }) => {
+          const globalIndex =
+            sections.slice(0, sections.indexOf(section)).reduce((n, s) => n + s.data.length, 0) +
+            index;
+          return (
+            <AuditionCard
+              audition={item}
+              index={globalIndex}
+              scrollY={scrollY}
+              onPress={() => router.push(`/audition/${item.id}`)}
+              onLongPress={() => confirmDelete(item.id, item.ensemble)}
+              onChangeStatus={(status) => updateAudition(item.id, { status })}
+              onMarkAttended={() => updateAudition(item.id, { status: 'attended' })}
+              onDismissNudge={() => updateAudition(item.id, { attendNudgeDismissed: true })}
+            />
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -120,8 +150,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   emptyTitle: { textAlign: 'center' },
   emptyText: { textAlign: 'center', opacity: 0.7 },
-  list: { padding: 20, gap: 14 },
-  heading: { marginBottom: 8 },
+  topSection: { paddingHorizontal: 20, paddingTop: 16 },
+  list: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, gap: 14 },
   sectionHeader: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 10, marginBottom: 2 },
   button: {
     marginTop: 8,
