@@ -1,12 +1,21 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  FadeInDown,
+  interpolate,
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { formatIsoDate } from '@/lib/date';
 import { Listing } from '@/types/listing';
+
+// Approximate listing-card height (incl. gap), used for the scroll-fade math.
+const ROW_ESTIMATE = 150;
 
 /** A single discoverable listing. Tap the heart to add it to your tracking. */
 export function ListingCard({
@@ -15,12 +24,14 @@ export function ListingCard({
   onAdd,
   onRemove,
   index = 0,
+  scrollY,
 }: {
   listing: Listing;
   added: boolean;
   onAdd: () => void;
   onRemove: () => void;
   index?: number; // position in the list, for a staggered entrance
+  scrollY?: SharedValue<number>; // list scroll offset, for the scroll-fade effect
 }) {
   const dark = (useColorScheme() ?? 'light') === 'dark';
   const secondary = useThemeColor({}, 'secondary');
@@ -35,7 +46,19 @@ export function ListingCard({
   // Location and pay share one line to keep cards short.
   const facts = [listing.location, listing.pay].filter(Boolean).join('  ·  ');
 
+  // Scroll-fade: as a card scrolls up off the top, it gently shrinks and fades.
+  // Uses an estimated row height (cards are compact and similar on Browse).
+  const scrollStyle = useAnimatedStyle(() => {
+    if (!scrollY) return {};
+    const d = scrollY.value - index * ROW_ESTIMATE;
+    return {
+      opacity: interpolate(d, [0, 110], [1, 0.2], Extrapolation.CLAMP),
+      transform: [{ scale: interpolate(d, [0, 110], [1, 0.92], Extrapolation.CLAMP) }],
+    };
+  });
+
   return (
+    <Animated.View style={scrollStyle}>
     <Animated.View
       entering={FadeInDown.delay(Math.min(index, 10) * 60).duration(420)}
       style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -82,6 +105,7 @@ export function ListingCard({
           </Pressable>
         ) : null}
       </View>
+    </Animated.View>
     </Animated.View>
   );
 }

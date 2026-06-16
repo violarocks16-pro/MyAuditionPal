@@ -1,15 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ListingCard } from '@/components/listing-card';
@@ -42,6 +35,12 @@ export default function BrowseScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
+
+  // Track scroll position (on the UI thread) to drive the cards' scroll-fade.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
 
   const load = useCallback(async () => {
     setError(false);
@@ -141,10 +140,12 @@ export default function BrowseScreen() {
           <ActivityIndicator />
         </View>
       ) : (
-        <FlatList
+        <Animated.FlatList
           data={visible}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           onRefresh={load}
           refreshing={loading}
           keyboardShouldPersistTaps="handled"
@@ -168,6 +169,7 @@ export default function BrowseScreen() {
             <ListingCard
               listing={item}
               index={index}
+              scrollY={scrollY}
               added={addedIds.has(item.id)}
               onAdd={() => addListing(item)}
               onRemove={() => removeListing(item)}
